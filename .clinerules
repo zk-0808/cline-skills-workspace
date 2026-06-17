@@ -107,7 +107,27 @@
 
 **feature**：writing-plans → executing-plans → requesting-code-review → verification-before-completion → finishing-a-development-branch
 
-### 规范 6：终端命令兼容性（本机规则）
+### 规范 6：Git 推送原则
+
+**推送属于高风险操作，必须经用户确认。**
+
+推送前检查：
+1. `git status --short` 确认无意外修改
+2. 若当前分支为 `main`/`master`，提示切换 feature branch
+3. 运行项目校验（`node tools/validate-skills.js`、`npm test` 等）
+4. commit message 遵循 Conventional Commits 格式（`feat:`/`fix:`/`docs:`/`refactor:`/`chore:`）
+
+分支策略：
+- 默认在 feature branch 上工作（如 `feat/xxx`、`fix/xxx`）
+- 不直接推送到 `main`/`master` — 必须通过 PR
+- 仅在使用 `finishing-a-development-branch` 流程且用户明确选择「合并到主分支」时例外
+
+本仓库特定校验：
+```bash
+node tools/validate-skills.js   # 零 ERROR 才可推送
+```
+
+### 规范 7：终端命令兼容性（本机规则）
 
 本机 Windows 11 中文系统 (GBK 936)，默认 Shell cmd.exe，PowerShell 5.1。
 
