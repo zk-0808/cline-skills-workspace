@@ -1,0 +1,56 @@
+# ============================================================
+# Workflow: Bug Fix (缺陷修复)
+# 适用于: 错误报告、异常、崩溃、回归问题
+# 对应 MCP tool: workflow_advisor (workflow_type=bugfix)
+# ============================================================
+
+workflow:
+  name: bug_fix
+  label: "Bug Fix (缺陷修复)"
+  icon: "🔴"
+  description: >
+    定位问题根因 → 执行修复 → 审查 → 验证。
+    适用于 bug、错误报告、异常、崩溃、回归问题。
+
+steps:
+  - order: 1
+    tool: systematic_debugging
+    description: "定位根因 + 修复方案"
+    input_mapping:
+      error_description: "task_description"
+      code_path: "context"
+    output_usage: "修复方案作为 executing_plans 的 plan 参数"
+
+  - order: 2
+    tool: executing_plans
+    description: "执行修复"
+    input_mapping:
+      plan: "systematic_debugging 的输出"
+      project_path: ""
+    output_usage: "修复代码实现完成"
+
+  - order: 3
+    tool: requesting_code_review
+    description: "审查修复代码"
+    input_mapping:
+      code_or_diff: "修复的代码 diff"
+    output_usage: "审查报告，确认修复正确"
+
+  - order: 4
+    tool: verification_before_completion
+    description: "验证修复完整性"
+    input_mapping:
+      task_summary: "修复摘要"
+      requirements: "原始 bug 描述"
+    output_usage: "验证通过后关闭"
+
+skip_option:
+  - review: "设置 skip_review=true 跳过 code_review 步骤"
+
+example:
+  input: "修复登录页面 500 错误"
+  output: |
+    1. systematic_debugging → 定位根因
+    2. executing_plans → 执行修复
+    3. requesting_code_review → 审查代码
+    4. verification_before_completion → 验证

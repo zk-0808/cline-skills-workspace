@@ -1,0 +1,68 @@
+# ============================================================
+# Workflow: Feature Development (功能开发)
+# 适用于: 新功能开发、模块新增、用户故事实现
+# 对应 MCP tool: workflow_advisor (workflow_type=feature)
+# ============================================================
+
+workflow:
+  name: feature_development
+  label: "Feature Development (功能开发)"
+  icon: "🔵"
+  description: >
+    从需求到交付的完整功能开发流程。
+    适用于新功能、新模块、新用户故事。
+
+steps:
+  - order: 1
+    tool: writing_plans
+    description: "出技术方案"
+    input_mapping:
+      objective: "task_description"
+      spec: ""
+      constraints: "context"
+    output_usage: "输出作为 executing_plans 的 plan 参数"
+
+  - order: 2
+    tool: executing_plans
+    description: "编码实现"
+    input_mapping:
+      plan: "writing_plans 的完整输出"
+      project_path: ""
+    output_usage: "完成代码实现，准备审查"
+
+  - order: 3
+    tool: requesting_code_review
+    description: "审查代码"
+    input_mapping:
+      code_or_diff: "变更的代码或 git diff"
+      review_focus: "full"
+    output_usage: "审查报告，标示 Critical/Important/Minor 问题"
+
+  - order: 4
+    tool: verification_before_completion
+    description: "完成前验证"
+    input_mapping:
+      task_summary: "功能描述"
+      requirements: "原始需求"
+      changed_files: "变更文件列表"
+    output_usage: "验证清单，确认是否满足交付标准"
+
+  - order: 5
+    tool: finishing_development_branch
+    description: "提PR收尾"
+    input_mapping:
+      branch_name: "功能分支名"
+      pr_title: "功能标题"
+    output_usage: "PR 链接和合并状态"
+
+skip_option:
+  - review: "设置 skip_review=true 跳过 requesting_code_review 步骤"
+
+example:
+  input: "开发用户注册功能（邮箱+密码）"
+  output: |
+    1. writing_plans → 出技术方案
+    2. executing_plans → 编码实现
+    3. requesting_code_review → 审查代码
+    4. verification_before_completion → 验证
+    5. finishing_development_branch → 提PR收尾

@@ -1,0 +1,45 @@
+# ============================================================
+# Workflow: Research (调研/技术选型)
+# 适用于: 技术调研、方案对比、架构评估、可行性分析
+# 对应 MCP tool: workflow_advisor (workflow_type=research)
+# ============================================================
+
+workflow:
+  name: research
+  label: "Research (调研)"
+  icon: "🟣"
+  description: >
+    发散思路和方案对比 → 整理调研报告 → 验证结论完整性。
+    适用于技术调研、方案选型、可行性分析。
+
+steps:
+  - order: 1
+    tool: brainstorming
+    description: "发散思路和备选方案"
+    input_mapping:
+      topic: "task_description"
+      constraints: "context"
+    output_usage: "备选方案列表和对比分析作为 writing_plans 的 spec 参数"
+
+  - order: 2
+    tool: writing_plans
+    description: "整理调研报告"
+    input_mapping:
+      objective: "调研目标"
+      spec: "brainstorming 的输出"
+    output_usage: "结构化调研报告"
+
+  - order: 3
+    tool: verification_before_completion
+    description: "验证调研结论完整性"
+    input_mapping:
+      task_summary: "调研主题"
+      requirements: "调研目标"
+    output_usage: "确认所有调研问题已覆盖"
+
+example:
+  input: "调研 React 和 Vue 的选型对比"
+  output: |
+    1. brainstorming → 发散方案对比维度
+    2. writing_plans → 整理调研报告
+    3. verification_before_completion → 验证结论覆盖度
