@@ -3,7 +3,8 @@
 > Cline Agent 技能的质量标杆仓库。每个 Skill 都经过测试验证、有明确版本、可独立安装使用。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-15-blue)](skills/)
+[![Skills](https://img.shields.io/badge/skills-17-blue)](skills/)
+[![Runtime](https://img.shields.io/badge/runtime-memory%20%2B%20context%20compactor-green)](skills-mcp-server/)
 
 ---
 
@@ -41,6 +42,36 @@ cp -r skills/brainstorming ~/.claude/skills/
 | **utility** | [skill-installer](skills/skill-installer/) | 1.0.0 | 技能安装管理 |
 | | [dispatching-parallel-agents](skills/dispatching-parallel-agents/) | 1.0.0 | 并行代理调度 |
 | | [subagent-driven-development](skills/subagent-driven-development/) | 1.0.0 | 子代理驱动开发 |
+| | [memory-keeper](skills/memory-keeper/) | 0.1.0 | 跨会话长期记忆（SQLite + FTS5） |
+| **workflow** | [context-compactor](skills/context-compactor/) | 0.1.0 | 上下文压缩与会话交接 |
+
+---
+
+## 运行时层 · Memory & Context
+
+> 让 Agent 跨会话不再失忆，长任务接近窗口上限时自动打包交接。
+
+`skills-mcp-server` 暴露 4 个新工具：
+
+| 工具 | 用途 |
+|------|------|
+| `memory_commit` | 持久化关键事实/决策/经验到项目本地 SQLite |
+| `memory_recall` | FTS5 全文检索 + bm25 排序，可按 kind/tag 过滤 |
+| `memory_list` | list/stats/delete/pin/unpin 管理记忆条目 |
+| `compact_context` | 生成结构化交接包（目标/进度/决策/下一步），可选写入 episodic 记忆 |
+
+**零外部依赖**：使用 Node 22.5+ 内置的 `node:sqlite`，无需 `better-sqlite3` 等需要编译的 native module。
+
+**项目隔离**：记忆库按 `sha256(项目路径)[:12]` 哈希隔离，存于 `~/.cline-skills/memory/{hash}/memory.db`。
+
+```bash
+# 跑端到端测试
+cd skills-mcp-server
+node test-memory.js
+# === 结果: 13 passed, 0 failed ===
+```
+
+详见 [docs/gap-analysis-runtime-layer.md](docs/gap-analysis-runtime-layer.md) 与 [docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md](docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md)。
 
 ---
 

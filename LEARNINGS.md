@@ -98,6 +98,39 @@
 - **机制**：LEARNINGS.md + .clinerules 规则十
 - **关联规则**：规则十
 
+### 2026-06-17: 选择 better-sqlite3 → 实测后切换到 node:sqlite
+
+- **类型**：架构决策 / 错误 → 修正
+- **背景**：实施 memory-keeper / context-compactor MVP，按计划用 better-sqlite3
+- **问题**：
+  1. 本机 Node v24.15.0 + better-sqlite3@11.10.0 没有匹配的 prebuilt 二进制
+  2. 本机没装 Visual Studio C++ Build Tools，源码编译失败（gyp ERR）
+  3. PowerShell 执行策略阻止 `npm.ps1`，只能 `npm.cmd`
+- **替代假设**：(A) 降版本 (B) 装 VS 编译 (C) 换 sql.js (WASM) (D) 用 Node 22.5+ 内置的 `node:sqlite`
+- **实测**：写 probe 脚本验证 → `node:sqlite` 默认启用 FTS5 + bm25 + unicode61 tokenizer，对中文混排可索引
+- **决策**：切到 `node:sqlite`，零 native 依赖、零编译。代价是 `engines.node` 提到 ≥22.5
+- **教训**：
+  1. 选依赖前先看 prebuilt 矩阵覆盖的 Node 版本
+  2. 宁可加最低 Node 版本要求，也比让用户装 VS Build Tools 友好
+  3. 宪法二「问题定义优于方案设计」：先承认计划假设是错的，再列竞争方案选最低复杂度的
+- **关联规则**：宪法三、规则七
+
+### 2026-06-17: validate-skills.js 不兼容 CRLF
+
+- **类型**：错误
+- **背景**：在 Windows 上写新 SKILL.md，校验报"缺少有效 YAML frontmatter"
+- **问题**：正则 `/^---\n([\s\S]*?)\n---/` 只匹配 LF 行尾。新建文件被自动转 CRLF（`0d 0a`），匹配失败
+- **教训**：跨平台脚本的换行处理必须用 `\r?\n`；`String.split('\n')` 也要换成 `split(/\r?\n/)` 防止把 `\r` 残留在 key 中
+- **修复**：单行替换正则即可，不需要全文转换文件
+- **关联规则**：规则七
+
+### 2026-06-17: PowerShell 不支持 `&&`
+
+- **类型**：错误（重复触发）
+- **背景**：执行 `cd dir && cmd` 链式命令
+- **教训**：本机默认 PowerShell 5.1 用 `;` 分隔（顺序执行，与 bash `;` 一致），不支持短路 `&&`
+- **关联规则**：规则七（已记录在 .clinerules）
+
 ### 2024-06-17: 规则十二——方案设计前必须验证问题定义
 
 - **类型**：用户建议

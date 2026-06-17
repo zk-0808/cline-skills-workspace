@@ -19,10 +19,11 @@ let errors = [];
 let warnings = [];
 
 function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  // 兼容 LF 和 CRLF 行尾（Windows 编辑器常见）
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
   
-  const lines = match[1].split('\n');
+  const lines = match[1].split(/\r?\n/);
   const result = {};
   for (const line of lines) {
     const colonIdx = line.indexOf(':');
