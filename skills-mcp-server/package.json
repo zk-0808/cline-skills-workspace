@@ -1,13 +1,12 @@
 {
   "name": "skills-mcp-server",
-  "version": "1.1.0",
+  "version": "2.1.0",
   "description": "MCP server exposing development skills + runtime memory/compaction tools for Cline",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test-handlers.js",
-    "test:memory": "node test-memory.js"
+    "test": "node test-memory.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
