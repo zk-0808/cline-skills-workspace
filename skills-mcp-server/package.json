@@ -9,7 +9,9 @@
     "test": "node test-memory.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "nanoid": "^5.1.11",
+    "yaml": "^2.9.0"
   },
   "engines": {
     "node": ">=22.5.0"

@@ -87,8 +87,13 @@ export function getDb(projectRoot) {
   const dbPath = getDbPath(hash);
   const db = new DatabaseSync(dbPath);
   // node:sqlite 没有 pragma() 简便方法，用 exec
+  // 并发安全三件套（来源：2026-06-18 外部评审 §4.1）
+  //   journal_mode=WAL：读写不互锁
+  //   synchronous=NORMAL：WAL 下推荐档位，崩溃恢复仍然安全
+  //   busy_timeout=5000：MCP 多请求并发时，写锁竞争最多等 5s 而非立即 SQLITE_BUSY
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA synchronous = NORMAL");
+  db.exec("PRAGMA busy_timeout = 5000");
   initSchema(db);
   dbCache.set(hash, db);
   return { db, hash };
