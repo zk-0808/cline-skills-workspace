@@ -32,12 +32,41 @@ export const toolDefinition = {
   }
 };
 
-function escapeFts(q) {
-  // FTS5 不允许某些字符直接出现；裸用户输入用双引号包裹做短语匹配
+/**
+ * 把用户裸输入转成安全的 FTS5 MATCH 表达式。
+ *
+ * 设计目标（来自 2026-06-18 外部评审 §2.2）：
+ *  1. 不破坏 FTS5 语法：双引号必须 `"` → `""` 转义
+ *  2. 不强制整句短语匹配：词序稍变也能召回
+ *  3. 保留高级用户能力：query 已含 FTS5 操作符（双引号、括号、星号、AND/OR/NOT）则原样透传
+ *
+ * 算法：
+ *  - 检测 query 是否已包含 FTS5 操作符 → 是则原样返回（信任用户）
+ *  - 否则按空白拆 token，每个 token 内部 `"` → `""`，再用双引号包裹
+ *  - 多 token 之间用空格隐式 AND 连接（FTS5 默认行为）
+ *  - 单 token 全为标点/空 → 跳过，避免生成空表达式
+ */
+export function escapeFts(q) {
   if (!q) return "";
-  // 已含引号或操作符则原样使用，否则用引号包成短语
-  if (/["()*]/.test(q) || /\b(AND|OR|NOT)\b/.test(q)) return q;
-  return `"${q.replace(/"/g, '""')}"`;
+  const trimmed = q.trim();
+  if (!trimmed) return "";
+
+  // 已含 FTS5 操作符 → 信任用户，原样透传
+  if (/["()*]/.test(trimmed) || /\b(AND|OR|NOT|NEAR)\b/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // 按空白拆 token；每 token 转义内部双引号 + 包成短语
+  const tokens = trimmed
+    .split(/\s+/)
+    .map((t) => t.replace(/[\u0000-\u001f\u007f]/g, "")) // 去控制字符
+    .filter((t) => t.length > 0);
+
+  if (tokens.length === 0) return "";
+
+  return tokens
+    .map((t) => `"${t.replace(/"/g, '""')}"`)
+    .join(" ");
 }
 
 export function handler(args) {
