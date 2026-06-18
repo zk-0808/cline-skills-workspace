@@ -34,7 +34,7 @@
 |------|------|
 | "AI 不会忘记你的项目" | 容易撞 ChatGPT/Claude/Cline Memory，叙事被覆盖 |
 | "Multi-Agent Coordination" | 学生 / 个人开发者无感；打不过 Cursor Teams |
-| "Knowledge Graph" / "Vector Memory" | 进入 Iranti / Memorix 红海；与本仓「零 native 依赖」宪法冲突 |
+| "Knowledge Graph" / "Vector Memory" | 进入 Iranti / Memorix 红海；与本仓「零额外原生编译依赖」宪法冲突 |
 | "Cross-Tool Sync" | 实现复杂度爆炸；handoff 是纯 Markdown 天然兼容，不需要「同步」 |
 
 ---
@@ -80,7 +80,7 @@
 | 不做 | 理由 |
 |------|------|
 | 多 Agent 协同平台（Claude ↔ Codex ↔ Cline 跨工具） | Iranti / Memorix 已占据；我们的「Agent = 任意独立上下文窗口」定义已经覆盖实际需求 |
-| 向量数据库 / 语义检索 | FTS5 + bm25 已够用；引入 sqlite-vec / pgvector 违反「零 native 依赖」宪法 |
+| 向量数据库 / 语义检索 | FTS5 + bm25 已够用；引入 sqlite-vec / pgvector 违反「零额外原生编译依赖 / 零 node-gyp」宪法 |
 | 跨工具实时同步 | handoff 是纯 Markdown + git，天然跨工具，不需要做 |
 | 团队协同 / 权限模型 / 冲突合并 | 打不过 Cursor Teams；本仓目标用户是个人开发者 |
 | Web UI / 仪表盘 | CLI + Markdown 文件 + git 已够；UI 是分心项 |
@@ -361,7 +361,7 @@ docs/product-positioning.md  ← 本文，最高锚点
 |------|------|---------|----------|
 | Cline 官方 memory | 单 agent KV | black-box | 我们 git-trackable + typed state |
 | `CLAUDE.md` / `AGENTS.md` | 启动时注入 | 单文件 | 我们有 status / next_action / 时间维度 |
-| Iranti | 多工具共享事实 | Postgres + pgvector | 我们零 native 依赖、不做事实层 |
+| Iranti | 多工具共享事实 | Postgres + pgvector | 我们零额外原生编译依赖、不做事实层 |
 | Memorix | MCP 跨客户端 memory | 多种后端 | 我们聚焦 handoff 而非 memory |
 | casr | 跨 agent session 转换 | IR 中间表示 | 我们更轻量，单 schema |
 | agent-handoff (codes1gn) | 结构化 handoff 文件 | Markdown | **方向最近**，我们额外做 stale 检测 + memory 互补 |

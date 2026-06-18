@@ -87,7 +87,7 @@
 
 | 决策 | 选择 | 理由（证据等级） |
 |------|------|----------|
-| YAML 解析库 | `yaml` (npm，纯 JS) | [文档] 零原生依赖，与本仓宪法对齐；[实测]待验证安装大小 |
+| YAML 解析库 | `yaml` (npm，纯 JS) | [文档] 零额外原生编译依赖，与本仓宪法对齐；[实测]待验证安装大小 |
 | nanoid | `nanoid/non-secure` | [文档] 6 字符短 ID 避免引入 crypto 重依赖；归档 ID 不需要安全性 |
 | git 探测 | `child_process.execSync('git rev-parse ...')` | [实测]本仓 windows + cmd.exe 已验证；不引入 simple-git 等包 |
 | 时间戳格式 | ISO8601 含时区，`new Date().toISOString()` 返回 UTC，**手动加本地偏移** | [文档] 用户偏好显示本地时区（详见 §3.2 实现细节） |
@@ -236,7 +236,7 @@
 - `js-yaml`（更老，~200KB）
 - 手写 frontmatter parser（risk：边缘 case 多）
 
-选 `yaml`：API 干净（`YAML.parse` / `YAML.stringify`）、保持 key 顺序、零 native。
+选 `yaml`：API 干净（`YAML.parse` / `YAML.stringify`）、保持 key 顺序、零额外原生编译依赖（纯 JS）。
 
 ### 3.2 时区处理（避坑）
 
