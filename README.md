@@ -1,32 +1,149 @@
-# Cline Skills Workspace
+# 🧠 cline-skills-workspace
 
-> Cline Agent 技能的质量标杆仓库。每个 Skill 都经过测试验证、有明确版本、可独立安装使用。
+> **Project Continuity for AI Coding.**
+> Resume your project exactly where you left off.
+>
+> 让 AI 从上次停下的地方继续工作。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-17-blue)](skills/)
-[![Runtime](https://img.shields.io/badge/runtime-memory%20%2B%20context%20compactor-green)](skills-mcp-server/)
+[![Skills](https://img.shields.io/badge/skills-15-blue)](skills/)
+[![Runtime](https://img.shields.io/badge/runtime-memory%20%2B%20handoff%20%2B%20compact-green)](skills-mcp-server/)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.5-brightgreen)](https://nodejs.org/)
+
+---
+
+## 它解决什么
+
+间歇式开发的**连续性丢失**：
+
+1. **跨会话失忆** —— 周一聊 2 小时做到一半，周四回来 Cline 完全不知道上次在哪里。
+2. **重启踩同一个坑** —— 上次确认过「不要改 X 表」，新会话又被建议改一次。
+3. **token 爆炸断档** —— 一个 task 太长被截断，关键决策丢失，被迫从零解释。
+
+详见 [`docs/product-positioning.md`](docs/product-positioning.md) — 项目定位文档（本仓最高锚点）。
+
+---
+
+## 三层模型
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  memory   = 长期事实层（架构、用户偏好、失败教训）             │
+│             生命周期：项目级，跨所有会话                        │
+│             工具：memory_commit / memory_recall / memory_list │
+├─────────────────────────────────────────────────────────────┤
+│  handoff  = 当前工作状态层（status / next_action / do_not）   │
+│             生命周期：会话之间，单分支单 active                 │
+│             工具：handoff_write / handoff_resume              │
+├─────────────────────────────────────────────────────────────┤
+│  compact  = 会话内压缩（防 token 爆炸）                        │
+│             生命周期：单次会话内部                              │
+│             工具：compact_context                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+三层职责互不重叠，**禁止合并**。
 
 ---
 
 ## 快速开始
 
-将 `skills/` 下任意 Skill 目录复制到你的 Cline 配置目录即可使用：
+### 1. 安装 MCP server（运行时层）
 
 ```bash
-cp -r skills/brainstorming ~/.claude/skills/
+cd skills-mcp-server
+npm install
 ```
 
-**5 分钟体验**：用 brainstorming 技能设计一个新功能。
+然后在 Cline 的 `cline_mcp_settings.json` 注册：
 
-1. 在 Cline 中输入: "我想设计一个用户标签系统"
-2. Cline 自动加载 brainstorming 技能，通过协作对话逐步产出完整设计文档
+```json
+{
+  "mcpServers": {
+    "skills-mcp-server": {
+      "command": "node",
+      "args": ["E:/path/to/cline-skills-workspace/skills-mcp-server/index.js"]
+    }
+  }
+}
+```
+
+> Node 必须 ≥ **22.5**（启动期会预检；低版本直接拒绝启动，避免 `node:sqlite` 隐蔽报错）。
+
+### 2. 安装 Skills（提示词层）
+
+把 `skills/` 下任意目录复制到 Cline 配置目录：
+
+```bash
+cp -r skills/handoff-protocol ~/.claude/skills/
+cp -r skills/memory-keeper    ~/.claude/skills/
+cp -r skills/context-compactor ~/.claude/skills/
+```
+
+### 3. 体验跨会话连续性
+
+**会话 1**：完成一些工作后写交接：
+```
+用户：把今天的进度写成 handoff
+Cline → handoff_write({ goal, completed, next_action, do_not })
+       ✅ 已写入 .cline/handoffs/HANDOFF_<branch>_active.md（进 git）
+```
+
+**会话 2**（几天后，新窗口）：
+```
+用户：继续上次对话
+Cline → handoff_resume()
+       ## 📋 handoff 已恢复
+       - branch: feat/xxx
+       - status: active（3 天前更新）
+       - goal: ...
+       ### ▶️ next_action（2 项）...
+       ### 🚫 do_not（4 项）...
+```
 
 ---
 
-## 技能目录
+## 运行时层 · MCP 工具集
+
+`skills-mcp-server` 暴露 6 个工具：
+
+| 工具 | 层 | 用途 |
+|------|----|------|
+| `memory_commit` | memory | 持久化关键事实/决策/经验到项目本地 SQLite |
+| `memory_recall` | memory | FTS5 全文检索 + bm25 排序，可按 kind/tag 过滤；多 token 词序无关 |
+| `memory_list`   | memory | list / stats / delete / pin / unpin 管理记忆条目 |
+| `handoff_write` | handoff | 写入 typed YAML 到 `.cline/handoffs/<branch>_active.md`，进 git |
+| `handoff_resume`| handoff | 自动校验 branch + status + stale + project_hash，恢复结构化恢复包 |
+| `compact_context` | compact | 生成结构化交接包（目标/进度/决策/下一步），可选写入 episodic 记忆 |
+
+**零额外原生编译依赖**：使用 Node 22.5+ 内置的 `node:sqlite`（FTS5 默认启用），无需 `better-sqlite3` 等 node-gyp 编译过程。
+
+**项目隔离**：记忆库按 `sha256(项目路径)[:12]` 哈希隔离，存于 `~/.cline-skills/memory/<hash>/memory.db`。
+
+**Handoff 默认进 git**：`.cline/handoffs/HANDOFF_<branch>_active.md` 跟随项目，PR review 可见 `status: active → done` 的 diff，天然审计；`--local` 模式可落到 `~/.cline-skills/handoffs/<hash>/`。
+
+```bash
+# 跑端到端测试
+cd skills-mcp-server
+node test-memory.js          # 13 passed, 0 failed
+node test-escape-fts.js      # 23 passed, 0 failed
+node test-handoff-lib.js     # 58 passed, 0 failed
+node test-handoff-handlers.js # 15 passed, 0 failed
+```
+
+详见：
+- [`docs/handoff-schema.md`](docs/handoff-schema.md) — Handoff Schema v1.0（已锁定）
+- [`docs/gap-analysis-runtime-layer.md`](docs/gap-analysis-runtime-layer.md) — 运行时层差距分析
+
+---
+
+## Skills 目录
 
 | 分类 | 技能 | 版本 | 说明 |
 |------|------|------|------|
+| **continuity** ⭐ | [handoff-protocol](skills/handoff-protocol/) | 1.0.0 | 教 Cline 何时写、何时 resume、字段含义 |
+| | [memory-keeper](skills/memory-keeper/) | 0.1.0 | 跨会话长期记忆（SQLite + FTS5）|
+| | [context-compactor](skills/context-compactor/) | 0.1.0 | 上下文压缩与会话交接 |
 | **workflow** | [brainstorming](skills/brainstorming/) | 1.0.0 | 创意构思前置 |
 | | [writing-plans](skills/writing-plans/) | 1.0.0 | 编写实施计划 |
 | | [executing-plans](skills/executing-plans/) | 1.0.0 | 执行实施计划 |
@@ -37,51 +154,20 @@ cp -r skills/brainstorming ~/.claude/skills/
 | | [finishing-a-development-branch](skills/finishing-a-development-branch/) | 1.0.0 | 分支收尾 |
 | **meta** | [requesting-code-review](skills/requesting-code-review/) | 1.0.0 | 代码审查 |
 | | [verification-before-completion](skills/verification-before-completion/) | 1.0.0 | 完成前验证 |
-| **domain** | [pptx](skills/pptx/) | 1.0.0 | PowerPoint 操作 |
-| | [file-search](skills/file-search/) | 1.0.0 | 文件搜索 |
-| **utility** | [skill-installer](skills/skill-installer/) | 1.0.0 | 技能安装管理 |
-| | [dispatching-parallel-agents](skills/dispatching-parallel-agents/) | 1.0.0 | 并行代理调度 |
-| | [subagent-driven-development](skills/subagent-driven-development/) | 1.0.0 | 子代理驱动开发 |
-| | [memory-keeper](skills/memory-keeper/) | 0.1.0 | 跨会话长期记忆（SQLite + FTS5） |
-| **workflow** | [context-compactor](skills/context-compactor/) | 0.1.0 | 上下文压缩与会话交接 |
+| **utility** | [file-search](skills/file-search/) | 1.0.0 | 文件搜索 |
+| | [skill-installer](skills/skill-installer/) | 1.0.0 | 技能安装管理 |
 
----
-
-## 运行时层 · Memory & Context
-
-> 让 Agent 跨会话不再失忆，长任务接近窗口上限时自动打包交接。
-
-`skills-mcp-server` 暴露 4 个新工具：
-
-| 工具 | 用途 |
-|------|------|
-| `memory_commit` | 持久化关键事实/决策/经验到项目本地 SQLite |
-| `memory_recall` | FTS5 全文检索 + bm25 排序，可按 kind/tag 过滤 |
-| `memory_list` | list/stats/delete/pin/unpin 管理记忆条目 |
-| `compact_context` | 生成结构化交接包（目标/进度/决策/下一步），可选写入 episodic 记忆 |
-
-**零外部依赖**：使用 Node 22.5+ 内置的 `node:sqlite`，无需 `better-sqlite3` 等需要编译的 native module。
-
-**项目隔离**：记忆库按 `sha256(项目路径)[:12]` 哈希隔离，存于 `~/.cline-skills/memory/{hash}/memory.db`。
-
-```bash
-# 跑端到端测试
-cd skills-mcp-server
-node test-memory.js
-# === 结果: 13 passed, 0 failed ===
-```
-
-详见 [docs/gap-analysis-runtime-layer.md](docs/gap-analysis-runtime-layer.md) 与 [docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md](docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md)。
+> 已归档 Skills 见 [`archive/skills/`](archive/skills/)（pptx / dispatching-parallel-agents / subagent-driven-development —— 与 Project Continuity 定位无关）。
 
 ---
 
 ## 技能标准
 
-每个 Skill 遵循 [SKILL.md 规范](docs/skill-spec.md) — 12 个必填 frontmatter 字段，4 个正文章节。
+每个 Skill 遵循 [`docs/skill-spec.md`](docs/skill-spec.md) — 12 个必填 frontmatter 字段，4 个正文章节。
 
 ```bash
 node tools/validate-skills.js
-# ✅ 所有 Skill 通过校验!
+# ✅ 所有 Skill 通过校验! (15 skills, 0 errors)
 ```
 
 ---
@@ -90,37 +176,71 @@ node tools/validate-skills.js
 
 ```
 cline-skills-workspace/
-├── skills/                       # 技能定义（核心资产）
-│   ├── brainstorming/
-│   │   ├── SKILL.md              # 标准化技能定义
-│   │   ├── SKILL.test.md         # 测试用例
-│   │   └── examples/             # 使用示例
-│   └── ... (14 more)
-├── skills-mcp-server/            # MCP 服务器
-├── tools/
-│   └── validate-skills.js        # 技能格式校验
+├── skills/                       # Skills（Cline 端提示词层）
+│   ├── handoff-protocol/         # ⭐ Project Continuity 核心
+│   ├── memory-keeper/
+│   ├── context-compactor/
+│   └── ... (12 more)
+├── skills-mcp-server/            # MCP 服务器（运行时层）
+│   ├── handlers/                 # memory_* / handoff_* / compact_context
+│   ├── lib/                      # db / git / handoff-{schema,fs}
+│   └── test-*.js                 # 109 个用例
 ├── docs/
-│   ├── skill-spec.md             # 规范标准
-│   ├── roadmap.md                # 发展规划
-│   └── examples/                 # 演示案例
-└── CONTRIBUTING.md               # 贡献指南
+│   ├── product-positioning.md    # ⭐ 项目定位（最高锚点）
+│   ├── handoff-schema.md         # Handoff Schema v1.0
+│   ├── skill-spec.md             # Skill 规范
+│   └── ...
+├── tools/
+│   └── validate-skills.js        # Skill 格式校验
+├── archive/                      # 已归档（与定位无关的历史资产）
+└── CONTRIBUTING.md
 ```
 
 ---
 
-## 愿景
+## 为什么不用其他方案
 
-成为 Cline 生态的「npm for skills」— 每个 Skill 可发现、可安装、可验证。
+| 方案 | 局限 | 我们的差异 |
+|------|------|----------|
+| Cline 官方 memory | 单 agent，KV black-box | git-trackable + typed state |
+| `CLAUDE.md` / `AGENTS.md` | 启动时注入，单文件 | 有 status / next_action / 时间维度 |
+| Iranti | Postgres + pgvector | 零额外原生编译依赖、不做事实层 |
+| Memorix | 跨客户端 memory | 我们聚焦 handoff 而非 memory |
+| 向量数据库（pgvector / sqlite-vec） | 需要 node-gyp / native 编译 | FTS5 + bm25 已够用 |
 
-**当前阶段**: 深度优先 — 将 15 个 Skill 做到工业级质量。
+完整对比见 [`docs/product-positioning.md`](docs/product-positioning.md) 附录 B。
 
-详见 [发展规划](docs/superpowers/specs/2026-06-17-project-roadmap-design.md)。
+---
+
+## 我们**不**做什么（YAGNI）
+
+为防止后续漂移，明确禁止以下方向（详见 `docs/product-positioning.md` §3）：
+
+- ❌ 多 Agent 协同平台
+- ❌ 向量数据库 / 语义检索
+- ❌ 跨工具实时同步
+- ❌ 团队协同 / 权限模型
+- ❌ Web UI / 仪表盘
+- ❌ Server 内嵌 LLM 调用
+
+任何打破禁令的提议，**先改 `docs/product-positioning.md`，再改其他**。
+
+---
+
+## 当前阶段
+
+**14 天 dogfooding sprint** — 通过实际使用验证 Project Continuity 体系价值，并落实外部评审反馈（见 [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) / [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md)）。
 
 ---
 
 ## 贡献
 
-欢迎贡献新 Skill！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解提交流程和审核标准。
+欢迎贡献 Skill 或运行时改进！请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+PR 前请确保：
+- `node tools/validate-skills.js` 0 ERROR
+- `skills-mcp-server` 全部测试通过
+- 与 `docs/product-positioning.md` 不冲突；冲突时**先改定位文件**
 
 ---
 
