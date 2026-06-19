@@ -80,8 +80,10 @@
 调用工具后必须先分析结果。允许同目标下连续调用只读工具（read_file、search_files、list_files）。
 准备高风险操作或调查完成时，向用户汇报并等待确认。
 
-高风险操作（需确认）：删除文件、git reset/hard、数据库变更、系统配置修改
+高风险操作（需确认）：删除文件、git reset/hard、数据库变更、系统配置修改、**默认 Shell 切换**（影响后续工具观察）
 普通操作（可继续）：修改文件、运行测试、lint/format
+
+**Shell 切换前必须验证可观测性**：VS Code 集成终端只对官方支持的 Shell（zsh / bash / fish / PowerShell）启用 Shell Integration。切到 cmd.exe 之类不在列表的 Shell 会让 Cline 无法捕获命令输出，等同于盲打。修改 `terminal.integrated.defaultProfile.windows` 之前必须确认新 Shell 在支持列表内。
 
 ### 规范 2：禁止自问自答
 
@@ -129,13 +131,25 @@ node tools/validate-skills.js   # 零 ERROR 才可推送
 
 ### 规范 7：终端命令兼容性（本机规则）
 
-本机 Windows 11 中文系统 (GBK 936)，默认 Shell cmd.exe，PowerShell 5.1。
+本机 Windows 11 中文系统 (GBK 936)。VS Code 集成终端默认 Shell 为 **PowerShell 7（pwsh.exe）**（2026-06-19 起，`terminal.integrated.defaultProfile.windows: "PowerShell 7"`）。
 
-- PowerShell 不支持 `&&`，改用 `;`（分号顺序执行）
-- `.ps1` 脚本保存为 UTF-8 with BOM
+PowerShell 7 同时满足：
+- ✅ `&&` / `||` 短路链接（PS 7+ 原生支持）
+- ✅ VS Code Shell Integration（输出可被 Cline 正确捕获）
+- ✅ UTF-8 默认（中文不乱码）
+- ✅ `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` 后 `npm` / `npm.ps1` 可直接运行
+
+约定：
+
 - 路径含空格必须双引号包裹
-- 执行 `.ps1` 须 `powershell -ExecutionPolicy Bypass -File`
-- CMD 环境变量用 `%PATH%`，PowerShell 用 `$env:PATH`
+- 环境变量用 `$env:VAR`（如 `$env:APPDATA`、`$env:PATH`）
+- 链式命令用 `&&`（PS 7+ 已支持，等价 cmd `&&`）
+- 多行/嵌套用 `|` 管道；`;` 仅用于"无依赖顺序执行"
+- npm 直接 `npm install`（ExecutionPolicy 已配 RemoteSigned，不再需 `npm.cmd`）
+
+若回退到 cmd.exe / PS 5.1（极少数场景）：
+- cmd：环境变量 `%VAR%`，无 Shell Integration（避免使用）
+- PS 5.1：用 `;` 而非 `&&`，`npm` 用 `npm.cmd`，`.ps1` 须加 `-ExecutionPolicy Bypass`
 
 ### 规范 8：搜索深度自适应
 

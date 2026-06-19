@@ -169,3 +169,55 @@
 
 - **关联规则**：宪法一（候选补充）
 - **来源**：用户当面纠正"是我刚刚手动关闭了"
+
+### 2026-06-19: PowerShell 兼容性约束 → 切换默认 Shell 根治
+
+- **类型**：架构决策（治本而非绕路）
+- **背景**：`.clinerules` 规范 7 长期累积了 5 条 PowerShell 特定约束（`&&` → `;`、`.ps1` UTF-8 BOM、`npm.ps1` ExecutionPolicy → `npm.cmd`、`$env:VAR` vs `%VAR%`、`-ExecutionPolicy Bypass`），每次新坑就往规范加一条提示词，但根因没解决——本机 VS Code 集成终端默认是 PowerShell 5.1
+- **问题**：用户反馈"修复 PowerShell 问题以减少提示词约束"
+- **替代方案**：
+  - (A) 改 VS Code `terminal.integrated.defaultProfile.windows` 为 `Command Prompt`——零侵入、可逆
+  - (B) 装 PowerShell 7：仍要解决 ExecutionPolicy
+  - (C) Git Bash：路径风格混合引入新问题
+- **决策**：选 A。在 `%APPDATA%\Code\User\settings.json` 加 `"terminal.integrated.defaultProfile.windows": "Command Prompt"`。同步精简 `.clinerules` 规范 7：cmd.exe 为主，PowerShell 退化为「显式启动 PS 终端时」的兜底说明
+- **教训**：
+  1. 当一条规范越长越像「绕过指令」时，是切换底层而非加更多绕过的信号
+  2. 治本永远比治标省 token——5 条 PS 兼容提示 → 4 行 cmd 主路径 + 3 行 PS 兜底
+  3. 用户级 settings.json 改动可逆（已备份 `settings.json.bak-20260619`），是低风险高收益的"基础设施修复"
+- **关联规则**：规范 7（已重写）
+- **生效条件**：VS Code 重启后新开终端生效；当前会话的 PS 终端继续保留直到关闭
+
+### 2026-06-19（晚）: cmd.exe 切换的事后翻车 — Shell Integration 维度被遗漏
+
+- **类型**：错误（决策维度不全）→ 二次修正
+- **背景**：上一条 LEARNINGS 决定切 cmd.exe 后，重启 VS Code 实测，遇到所有命令"输出无法捕获"——VS Code 弹窗：「Shell Integration Unavailable，请用 zsh/bash/fish/PowerShell」
+- **问题**：cmd.exe **不在 VS Code 官方支持的 Shell Integration 列表里**。我做决策时只对比了「语法兼容性」和「ExecutionPolicy 阻力」，**完全没考虑 Shell Integration 这一维**——而 Shell Integration 是 Cline 命令观察周期（规范 1）的前提
+
+- **Q0（系统性 vs 偶然）**：系统性。任何"工具决策"都要列**完整维度表**，缺一维就可能整体翻车。本次缺的是"工具运行时可观测性"
+
+- **Q1（错在哪）**：决策对比表只有 4 列（语法 / 复杂度 / 稳定性 / 上下文成本），漏了「与 Cline 工具观察周期的兼容性」这一关键维度
+
+- **Q2（为什么错）**：
+  1. 「shell 切换」这种"基础设施事务"被默认是低风险的——但实际上影响所有后续工具调用
+  2. 当时聚焦在「绕过指令」这个文本表象，没退一步问"切换后哪些 Cline 能力会变"
+  3. PowerShell 7 在第一轮被否的理由是"还要解决 ExecutionPolicy"，被我评为高代价；实际上一行 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` 就解决，根本不算阻力。**我误判了选项 B 的代价**
+
+- **Q3（现有规则为何没阻止）**：
+  - 宪法二「问题定义优于方案设计」要求列竞争方案，但**没规定方案对比的维度完整性检查**
+  - 规范 1「工具调用观察周期」假设 Cline 总能看到命令输出——但没规定"如果切换 Shell 影响这个能力，必须先验证"
+
+- **Q4（规则调整）**：建议在宪法二补充：「方案对比表必须显式列出『与现有工具链/可观测性的兼容性』维度，否则视为维度不全」。但权重不高，先观察 1-2 次。
+
+- **Q5（未来如何更早发现）**：
+  1. 切 Shell / 切包管理器 / 切运行时这种"底座变更"，对比表至少 5 列：语法 / 性能 / 装机成本 / **可观测性（输出/调试/日志）** / **与现有工具链兼容性**
+  2. 在 ACT 之前做一次"反向问题"：「如果选了 X，原本 work 的 Y 会不会坏？」
+  3. 「装机成本」要按"用户实际操作步骤"算，而不是凭印象——`Set-ExecutionPolicy` 一行命令 vs 我当时印象中的"复杂"
+
+- **修正动作**：
+  - 用户授权 `winget install Microsoft.PowerShell` 装 pwsh
+  - settings.json profile 改回 `PowerShell 7` + 显式路径 `C:/Program Files/PowerShell/7/pwsh.exe`
+  - .clinerules 规范 7 重写为 PS 7 主路径，cmd / PS 5.1 退化为兜底
+  - PowerShell 7 同时满足：`&&` 语法 ✅ + Shell Integration ✅ + npm.ps1 直接可用 ✅（一次性 RemoteSigned）
+
+- **关联规则**：宪法二（候选补充：维度完整性检查）、规范 7（已二次重写）
+- **来源**：用户引用 VS Code 弹窗"Shell Integration Unavailable"
