@@ -8,6 +8,7 @@ import fs from "fs";
 import os from "os";
 import crypto from "crypto";
 import { DatabaseSync } from "node:sqlite";
+import { getRemoteUrl } from "./git.js";
 
 const ROOT = path.join(os.homedir(), ".cline-skills", "memory");
 const VALID_KINDS = ["episodic", "semantic", "procedural"];
@@ -16,13 +17,46 @@ const VALID_KINDS = ["episodic", "semantic", "procedural"];
 const dbCache = new Map();
 
 /**
- * 计算项目哈希。优先使用环境变量 CLINE_PROJECT_ROOT，否则用 process.cwd()。
+ * 计算项目哈希（基于绝对路径）。
+ * 优先使用环境变量 CLINE_PROJECT_ROOT，否则用 process.cwd()。
  * 返回 sha256 截 12 字符。
+ *
+ * 这是 memory / handoff 当前的隔离键，**不会被改动**——已有的 26+ 条 memory
+ * 和 active handoff 都依赖这个 hash 落盘。任何切换都需要单独迁移工具。
  */
 export function getProjectHash(projectRoot) {
   const root = projectRoot || process.env.CLINE_PROJECT_ROOT || process.cwd();
   const normalized = path.resolve(root).toLowerCase();
   return crypto.createHash("sha256").update(normalized).digest("hex").substring(0, 12);
+}
+
+/**
+ * 计算跨设备稳定的项目哈希（基于 git remote URL）。
+ *
+ * fallback 链（按优先级）：
+ *   1. 归一化的 git remote URL → sha256[:12]
+ *   2. 没有 remote → 退回 getProjectHash（绝对路径）
+ *
+ * 用途：
+ *   - P1.3 memory_export / memory_import 的绑定键
+ *   - 未来可选的「跨设备 hash」开关
+ *
+ * 注意：本函数**不替代** getProjectHash。当前 memory.db 路径仍走旧 hash，
+ * 切换需要 export → 迁移目录 → import 流程（待 P1.3 实现）。
+ *
+ * @param {string} [projectRoot]
+ * @returns {string} 12 字符 hex
+ *
+ * 来源：2026-06-18 外部评审 §2.4
+ */
+export function getProjectHashByGitUrl(projectRoot) {
+  const root = projectRoot || process.env.CLINE_PROJECT_ROOT || process.cwd();
+  const remoteUrl = getRemoteUrl(root);
+  if (remoteUrl) {
+    return crypto.createHash("sha256").update(remoteUrl).digest("hex").substring(0, 12);
+  }
+  // 无 remote 时复用绝对路径 hash，保证总有返回值
+  return getProjectHash(projectRoot);
 }
 
 /**
