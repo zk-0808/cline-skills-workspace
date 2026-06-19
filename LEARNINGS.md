@@ -266,3 +266,66 @@
 
 - **关联规则**：规范 1（候选补充）、规范 10（新增）
 - **来源**：用户当面纠正"这种问题记录一下，终端需要交互以及其他无故导致模型没有回复的情况需要处理"
+
+### 2026-06-19（夜·续）: handoff 测试套件污染真实工作树 — 22:50 active 文件神秘消失事件破案
+
+- **类型**：错误（测试设计） / 调查方法论
+- **背景**：在本会话 22:50:38 跑 `node skills-mcp-server/test-handoff-handlers.js` 后，`.cline/handoffs/HANDOFF_feat-handoff-protocol_active.md` 被删除、archive 目录被创建为空。git 显示 `deleted:`，但 handler 代码的 GOAL_REQUIRED 分支根本不会触达 fs 操作 — 看似无解
+- **破案路径**：
+  1. 直接读 `tools/analyze-recent-tasks.mjs` 输出 → 锁定本会话覆盖 22:50（首条消息 22:45:06）
+  2. 写 `tools/inspect-task-window.mjs` 按 ts 提取窗口内全部 ui 消息 → 看到 22:50:38 跑测试 → 22:50:57 environment_details 提示 "Recently Modified Files: handoff_active.md"
+  3. 读测试源码 → `const projectRoot = path.resolve(__dirname, "..")` + `getCurrentBranch(projectRoot)` + `path.join(projectRoot, ".cline", "handoffs")` —— **测试直接在真实工作目录的 .cline/handoffs/ 下读写，slug 与当前 branch 一致 = 真实 active 文件**
+
+- **测试做了什么**：用例包括「status=done 触发归档」「归档后 resume 报 NO_HANDOFF」，会真实归档 active 文件、再清归档目录。每次 `node test-handoff-handlers.js` 都会把人类用户当前的 active handoff 移走。
+  - 19 个测试中至少 4 个直接动 active 槽位
+  - 测试结尾没有恢复原 active 文件（清空了 archive，但 active 也没回来）
+
+- **Q0（系统性 vs 偶然）**：系统性。任何"E2E 测试用真实工作目录"的设计都会污染开发者环境。本仓另外几个测试（lib / memory / project-hash / escape-fts）都用 `os.tmpdir()` 或 `mkdtempSync`，**唯独 handoff-handlers 用真实目录** —— 是孤立设计错误
+
+- **Q1（错在哪）**：
+  1. 测试设计：handoff_write/handoff_resume handler 内部写死 `getProjectRoot()` 从 git 推导，无法注入 `cwd`，只能让测试 `process.chdir()` 到临时目录或在真目录跑。作者选了后者
+  2. 调查初期：只读了 handler 源码就下结论"代码不会触达 fs"，没检查测试套件本身。**应该把"测试副作用"列入假设池**
+
+- **Q2（为什么错）**：
+  1. handler 副作用排除后，潜意识把"代码 = 唯一行为者"等同；忽略了测试也是同一份代码的执行路径
+  2. 22:50 事件的反向推理"从删除时间倒推执行了什么"没做——直接靠会话日志才破案，过于绕远
+  3. 测试输出里其实就有线索：「工作目录：E:\vscode for claude」，但当时被滚屏冲掉，没引起警觉
+
+- **Q3（现有规则为何没阻止）**：
+  - 没有规则规定"E2E 测试不得污染真实工作树"，是项目工程惯例缺失
+  - 调查方法上，宪法二要求列竞争假设，但我只列了 5 个候选都聚焦在"handler 自己删"，没列"测试套件"作为独立假设源
+
+- **Q4（规则调整）**：
+  1. **测试规范候选**：所有写文件的测试必须用 `os.tmpdir()` 或 `mkdtempSync`，禁止动真实工作树。修复方法：让 handoff handler 接受可选 `cwd` 参数，测试传临时目录 — **新功能，单独 feat/test-isolation 分支处理，不在本会话范围**
+  2. **调查方法论补充**：根因调查的假设池必须包含"非业务代码路径"——测试、CI 脚本、git hook、IDE 自动保存、文件系统监听器、备份工具 等，至少列 1-2 个
+
+- **Q5（未来如何更早发现）**：
+  1. 写测试时强制问"如果开发者跑这个测试 100 次，工作树会变什么样？" 答"什么都不变"才及格
+  2. 调查"文件被删"类问题，先查"文件被谁打开 / 谁有写权限的进程清单"——本机 Windows 可用 `handle.exe`（SysInternals）或 PowerShell `Get-Process | ?{$_.Modules ...}`
+  3. 看到测试输出有 "工作目录：<真实路径>" 字样，应立即停下来质疑测试隔离性
+
+- **关联规则**：测试规范（候选新增）、宪法二（候选补充：调查时假设池要含"非业务路径"）
+- **来源**：用户反馈"我查一下那时候的会话发生了什么就行了" → 自查会话日志破案
+
+### 2026-06-19（夜·副产品）: 用户提示「对话时间戳追溯」需求 — 已有 ts 字段，缺约定与查询工具
+
+- **类型**：用户建议（产品方向，非本会话实施）
+- **背景**：调查 22:50 事件用户提出"如果每条对话都有时间记录的话就好追溯了，考虑给每个对话打上时间戳，同时这个机制要在后台静默运行，不刻意占用上下文"
+
+- **现状评估**（基于本次破案过程的实测）：
+  1. **Cline 已经给每条 ui 消息打了 ts**（毫秒时间戳）—— `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\tasks\<task-id>\ui_messages.json` 中每条消息都有 `ts` 字段
+  2. 已有 `tools/analyze-recent-tasks.mjs`（task 级别汇总）和本会话新写的 `tools/inspect-task-window.mjs`（消息级别窗口提取）
+  3. 这两个工具已经能做"按时间窗口回溯具体动作"的查询，**机制层面无需新增**
+
+- **真正缺的东西**：
+  1. **约定**：什么时候需要追溯？（debug 时序问题、复盘 bug、查环境变更）→ 应作为 Skill 沉淀（`session-archaeology` 之类）
+  2. **零上下文成本**：上述脚本只读 `ui_messages.json`（项目外，不增加上下文）；输出可重定向到文件而非主对话流。这部分**已经满足**用户"后台静默不占用上下文"要求
+  3. **隐私边界**：消息内容含敏感信息（路径、token、用户输入），追溯工具应该提供"仅元数据/含工具调用/含完整内容"三档过滤
+
+- **建议产物（未来单独会话实施）**：
+  1. 把 `tools/analyze-recent-tasks.mjs` + `tools/inspect-task-window.mjs` 收编为 `tools/session-archaeology/`
+  2. 写 `skills/session-archaeology/SKILL.md`（触发场景：「查上次 X 时序」「定位某个文件被谁改」）
+  3. 不强制后台运行——按需调用即可，避免增加任何被动开销
+
+- **关联规则**：暂无（产品方向，非规则）
+- **来源**：用户当面提议
