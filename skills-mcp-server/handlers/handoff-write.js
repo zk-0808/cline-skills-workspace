@@ -309,8 +309,9 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
   const relActivePath =
     path.relative(projectRoot, activePath).replace(/\\/g, "/") || activePath;
 
-  // 探测 archive 下是否有同 slug 候选（最近 3 个）
+  // 探测 archive 下是否有同 slug 候选（最近 3 个，含时间差）
   const slug = slugify(branch);
+  const now = Date.now();
   let archiveCandidates = [];
   try {
     const archiveDir = getArchiveDir({ local });
@@ -339,14 +340,30 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
     ``,
     `### 📍 诊断`,
     `- **branch**: \`${branch}\``,
+    `- **projectRoot**: \`${projectRoot.replace(/\\/g, "/")}\``,
+    `- **cwd**: \`${process.cwd().replace(/\\/g, "/")}\``,
     `- **期望 active 路径**: \`${relActivePath}\` _(不存在)_`,
     `- **写入语义**: 因 active 文件不存在，本次 write 视为**新建 handoff**`,
   ];
 
   if (archiveCandidates.length > 0) {
+    // 对最近归档文件标注时间差（<60s 高亮警告）
+    const candidateLines = archiveCandidates.map((c) => {
+      const diffMs = now - c.mtime;
+      const ageStr =
+        diffMs < 60_000
+          ? `${Math.round(diffMs / 1000)} 秒前 ⚠️ 刚刚归档 — 如果这是意外，请检查上一条 handoff_write 是否误用了 status=done`
+          : diffMs < 3_600_000
+            ? `${Math.round(diffMs / 60_000)} 分钟前`
+            : diffMs < 86_400_000
+              ? `${Math.round(diffMs / 3_600_000)} 小时前`
+              : `${Math.round(diffMs / 86_400_000)} 天前`;
+      return `    - \`${c.name}\` (${ageStr})`;
+    });
+
     lines.push(
       `- **同 slug 归档候选**: 检测到 ${archiveCandidates.length} 个最近归档文件：`,
-      ...archiveCandidates.map((c) => `    - \`${c.name}\``),
+      ...candidateLines,
       ``,
       `> ⚠️ 上一个同 branch 的 handoff 已被归档（可能是 \`status=done\` 或手动归档）。`,
       `> 这意味着旧任务在语义上已**结束**。如果你想：`,
@@ -369,7 +386,10 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
     `- \`next_action\`: 至少 1 项可执行动作`,
     ``,
     `> 💡 schema 语义：\`status=done\` 是**终态**，归档后 active 槽位释放，下次 write 即新建。`,
-    `> 详见 \`docs/handoff-schema.md\` §3 状态机。`
+    `> 详见 \`docs/handoff-schema.md\` §3 状态机。`,
+    ``,
+    `> 🔍 **为什么同会话内 resume 成功但 write 失败？** 检查上一条 handoff_write 是否用了 \`status: done\`——这会立即归档 active 文件，导致后续 write 视为新建。`,
+    `> 如果确认 active 文件应存在但实际不存在：对比上方的 \`projectRoot\` 与你预期的项目根路径是否一致；或在 handoff 目录下手动检查文件。`
   );
 
   return lines.join("\n");

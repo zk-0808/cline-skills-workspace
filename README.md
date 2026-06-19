@@ -159,10 +159,11 @@ Cline → handoff_resume()
 ```bash
 # 跑端到端测试
 cd skills-mcp-server
-node test-memory.js          # 13 passed, 0 failed
-node test-escape-fts.js      # 23 passed, 0 failed
-node test-handoff-lib.js     # 58 passed, 0 failed
-node test-handoff-handlers.js # 15 passed, 0 failed
+node test-memory.js           # 13 passed, 0 failed
+node test-escape-fts.js       # 23 passed, 0 failed
+node test-handoff-lib.js      # 58 passed, 0 failed
+node test-handoff-handlers.js # 19 passed, 0 failed
+node test-project-hash.js     # 28 passed, 0 failed
 ```
 
 详见：
@@ -218,7 +219,7 @@ cline-skills-workspace/
 ├── skills-mcp-server/            # MCP 服务器（运行时层）
 │   ├── handlers/                 # memory_* / handoff_* / compact_context
 │   ├── lib/                      # db / git / handoff-{schema,fs}
-│   └── test-*.js                 # 109 个用例
+│   └── test-*.js                 # 141 个用例
 ├── docs/
 │   ├── product-positioning.md    # ⭐ 项目定位（最高锚点）
 │   ├── handoff-schema.md         # Handoff Schema v1.0
@@ -263,13 +264,22 @@ cline-skills-workspace/
 
 ## 当前阶段
 
-**Dogfooding sprint**（2026-06-18 ~ 06-21，缩短为 3 天）— 通过实际使用验证 Project Continuity 体系价值，并落实外部评审反馈（见 [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) / [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md)）。
+**v1.0 MVP 已完成** — Skill Foundation（15 个标准化 Skill）+ Runtime Layer（memory / handoff / compact 三层模型）形成第一次产品闭环。
 
-Sprint 期间已完成的 P1：
-- ✅ external-review §6「Sprint 期内必做」全部 6 项（PRAGMA busy_timeout / handoff 原子写 / handler eager import / Node engines / escapeFts 转义 / 「零额外原生编译依赖」措辞）
-- ✅ `getProjectHashByGitUrl()` —— 跨设备稳定的项目身份键（为未来 P1.3 memory_export/import 准备）
-- ✅ `install.mjs` —— 一键安装脚本（替代 5 步手动配置）
-- ✅ Shell 基建：PowerShell 7 + Shell Integration（`&&` 链式 + 输出捕获）
+| 组件 | 状态 | 验证 |
+|------|------|------|
+| 15 Skills 标准化 | ✅ | `validate-skills.js` 0 ERROR |
+| Runtime Layer（6 个 MCP 工具） | ✅ | 141 用例 / 0 失败 |
+| `install.mjs` 一键安装 | ✅ | 5 种模式 + sanity check |
+| `product-positioning.md` | ✅ | v1.0 锁定 |
+| `handoff-schema.md` | ✅ | v1.0 锁定 |
+| `memory-export-import` 设计 | ✅ | 文档完成，实现延期到 v1.1 |
+
+近期关键文档：
+- [`docs/dogfooding-sprint-retrospective.md`](docs/dogfooding-sprint-retrospective.md) — Sprint 复盘（Q1/Q2/Q3 答案 + 6 条教训）
+- [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) — Sprint 规则
+- [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md) — 外部评审反馈
+- [`docs/benchmark-plan.md`](docs/benchmark-plan.md) — BM25 验证框架设计
 
 ---
 
