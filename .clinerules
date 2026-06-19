@@ -163,6 +163,21 @@ PowerShell 7 同时满足：
 
 规范 5 定义的自动工作流（bugfix / refactor / research / feature）**不得绕过规范 1 的高风险确认要求**。当工作流步骤涉及高风险操作时，仍必须先取得用户授权。
 
+### 规范 10：命令非交互化检查
+
+每次 `execute_command` 之前必须自检以下四类陷阱，命中则改写命令再执行：
+
+1. **Pager 陷阱**：`git log` / `git diff` / `git show` / `git blame` / `man` / `less` / `more` 默认进 pager。
+   - 改写：`git --no-pager <cmd>`，或 `<cmd> | cat`，或一次性 `$env:GIT_PAGER='cat'`
+2. **确认提示陷阱**：`npm init` / `apt install` / `gh repo create` / `rm -i` / `winget install` 等默认问 yes/no。
+   - 改写：加 `-y` / `--yes` / `--confirm` / `--accept-source-agreements --accept-package-agreements`（在用户已授权前提下）
+3. **REPL 陷阱**：裸 `python` / `node` / `sqlite3` / `psql` 进入交互。
+   - 改写：必须带脚本/`-c "…"`/`-e "…"`/`<<EOF`，禁止裸调
+4. **长驻服务陷阱**：`npm run dev` / `npm start` / `node server.js` / `python -m http.server` 不会自己结束。
+   - 改写：明确告知用户"长驻服务"并征得确认；或用 `--once` / 端口探测 + 后台模式；或拆成短验证（如 `curl localhost:port` 后立刻 kill）
+
+链式命令中只要有一段命中以上任一项，整条命令都视为有阻塞风险——拆成多次 `execute_command`，每次只跑一段。
+
 ---
 
 ## 经验库
