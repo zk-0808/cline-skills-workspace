@@ -117,3 +117,77 @@ export function hasGitDir(cwd = process.cwd()) {
   }
   return false;
 }
+
+/**
+ * 归一化 git remote URL，让等价仓库映射到同一字符串。
+ *
+ * 规则（保守，只改语义无关的差异）：
+ *   - 转小写
+ *   - 去 `.git` 后缀
+ *   - 把 `git@host:owner/repo` 转成 `https://host/owner/repo`（SSH ↔ HTTPS 等价）
+ *   - 去尾部 `/`
+ *
+ * @param {string|null} url
+ * @returns {string|null}
+ *
+ * 示例：
+ *   "git@github.com:zk-0808/cline-skills-workspace.git"
+ *     → "https://github.com/zk-0808/cline-skills-workspace"
+ *   "https://github.com/zk-0808/cline-skills-workspace.git/"
+ *     → "https://github.com/zk-0808/cline-skills-workspace"
+ *   null → null
+ */
+export function normalizeRemoteUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  let u = url.trim().toLowerCase();
+
+  // SSH form: git@host:owner/repo(.git) → https://host/owner/repo
+  const sshMatch = /^git@([^:]+):(.+)$/.exec(u);
+  if (sshMatch) {
+    u = `https://${sshMatch[1]}/${sshMatch[2]}`;
+  }
+
+  // 先去尾部 /（包括 .git/ 这种后接斜杠的情况）
+  u = u.replace(/\/+$/, "");
+  // 再去 .git 后缀
+  u = u.replace(/\.git$/, "");
+
+  return u || null;
+}
+
+/**
+ * 获取仓库的远端 URL，作为跨设备稳定的项目身份。
+ *
+ * 查找优先级：
+ *   1. git config remote.origin.url
+ *   2. git remote get-url <第一个 remote>（origin 不存在时）
+ *   3. 都没有 → null
+ *
+ * 返回值已经过 `normalizeRemoteUrl` 归一化。
+ *
+ * @param {string} [cwd]
+ * @returns {string|null}
+ *
+ * 设计目的（来源：2026-06-18 外部评审 §2.4）：
+ *   memory / handoff 跨设备恢复时，使用绝对路径 hash 会因不同机器路径不同
+ *   而断档。git remote URL 跨机器稳定，是更合理的项目身份键。
+ */
+export function getRemoteUrl(cwd = process.cwd()) {
+  if (!isInGitRepo(cwd)) return null;
+
+  // 优先 origin
+  let url = runGit("config --get remote.origin.url", cwd);
+
+  // 没有 origin → 取第一个 remote
+  if (!url) {
+    const remotes = runGit("remote", cwd);
+    if (remotes) {
+      const first = remotes.split(/\r?\n/)[0]?.trim();
+      if (first) {
+        url = runGit(`remote get-url ${first}`, cwd);
+      }
+    }
+  }
+
+  return normalizeRemoteUrl(url);
+}
