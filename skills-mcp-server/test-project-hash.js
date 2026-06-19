@@ -68,9 +68,9 @@ eq("https + .git/ 同时去除",
   "https://github.com/foo/bar"
 );
 
-eq("大小写归一",
+eq("大小写：host 归一，path 保留",
   normalizeRemoteUrl("https://GitHub.com/Foo/Bar.git"),
-  "https://github.com/foo/bar"
+  "https://github.com/Foo/Bar"
 );
 
 eq("SSH 转 HTTPS",
@@ -93,6 +93,26 @@ eq("undefined 返 null", normalizeRemoteUrl(undefined), null);
 eq("空字符串返 null", normalizeRemoteUrl(""), null);
 eq("纯空白返 null", normalizeRemoteUrl("   "), null);
 eq("非字符串返 null", normalizeRemoteUrl(123), null);
+eq("ssh:// 格式归一",
+  normalizeRemoteUrl("ssh://git@github.com/foo/bar.git"),
+  "https://github.com/foo/bar"
+);
+eq("git:// 格式归一",
+  normalizeRemoteUrl("git://github.com/foo/bar.git"),
+  "https://github.com/foo/bar"
+);
+eq("userinfo 剥离（token 不影响 hash）",
+  normalizeRemoteUrl("https://token123@github.com/foo/bar.git"),
+  "https://github.com/foo/bar"
+);
+eq("query 和 fragment 去除",
+  normalizeRemoteUrl("https://github.com/foo/bar.git?ref=main#readme"),
+  "https://github.com/foo/bar"
+);
+eq("只 lower host，不 lower path",
+  normalizeRemoteUrl("https://GitHub.com/Foo/Bar.git"),
+  "https://github.com/Foo/Bar"
+);
 
 // ------------------------------------------------------------
 // B. getRemoteUrl 实测临时 repo
