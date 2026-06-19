@@ -173,7 +173,7 @@ node tools/validate-skills.js   # 零 ERROR 才可推送
 
 ### 规范 10：命令非交互化检查
 
-每次 `execute_command` 之前必须自检以下四类陷阱，命中则改写命令再执行：
+每次 `execute_command` 之前必须自检以下五类陷阱，命中则改写命令再执行：
 
 1. **Pager 陷阱**：`git log` / `git diff` / `git show` / `git blame` / `man` / `less` / `more` 默认进 pager。
    - 改写：`git --no-pager <cmd>`，或 `<cmd> | cat`，或一次性 `$env:GIT_PAGER='cat'`
@@ -183,8 +183,10 @@ node tools/validate-skills.js   # 零 ERROR 才可推送
    - 改写：必须带脚本/`-c "…"`/`-e "…"`/`<<EOF`，禁止裸调
 4. **长驻服务陷阱**：`npm run dev` / `npm start` / `node server.js` / `python -m http.server` 不会自己结束。
    - 改写：明确告知用户"长驻服务"并征得确认；或用 `--once` / 端口探测 + 后台模式；或拆成短验证（如 `curl localhost:port` 后立刻 kill）
+5. **编码管道陷阱**：PowerShell 在非 UTF-8 系统代码页下（如中文 Windows 默认 GBK），`| ForEach-Object { ... }` 等多行脚本块管道含 emoji 输出（✅❌⚠️🔍 等 4 字节 Unicode）时可能挂起。
+   - 改写：拆为单步命令（无管道）；或用 `cmd /c "..."` 绕过 PS 管道；或用 `node -e "..."` 做文件扫描/文本处理
 
-链式命令中只要有一段命中以上任一项，整条命令都视为有阻塞风险——拆成多次 `execute_command`，每次只跑一段。
+链式命令中只要有一段命中以上任一项，整条命令都视为有阻塞风险——拆成多次 `execute_command`，每次只跑一段。若已经因管道挂起而超时无返回，第一时间换 `cmd /c` 或 `node -e` 路径重试诊断。
 
 ---
 
