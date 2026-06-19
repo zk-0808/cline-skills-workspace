@@ -139,11 +139,26 @@ function copyDirRecursive(src, dst) {
   }
 }
 
+/**
+ * 读取 JSON 文件。区分三种情况：
+ *   - 文件不存在 → 返回 { missing: true }
+ *   - 文件存在但 JSON 损坏 → 返回 { corrupted: true, text: <前 200 字符> }
+ *   - 正常 → 返回解析后的对象
+ * 调用方必须处理前两种情况，禁止静默覆盖用户文件。
+ */
 function readJsonSafe(file) {
+  let raw;
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
+    raw = fs.readFileSync(file, "utf8");
+  } catch (e) {
+    if (e.code === "ENOENT") return { missing: true };
+    throw e; // 权限等其他错误，向外抛
+  }
+  try {
+    return JSON.parse(raw);
   } catch {
-    return null;
+    // JSON 损坏 — 返回诊断信息，禁止覆盖
+    return { corrupted: true, text: raw.slice(0, 200) };
   }
 }
 
@@ -174,6 +189,14 @@ function stepInstallServer() {
     stdio: "inherit",
     shell: false,
   });
+  if (r.error) {
+    if (r.error.code === "ENOENT") {
+      err(`未找到 ${npmCmd}，请确认 Node 安装完整`);
+    } else {
+      err(`npm install 启动失败: ${r.error.message}`);
+    }
+    return false;
+  }
   if (r.status !== 0) {
     err(`npm install 失败 (exit ${r.status})`);
     return false;
@@ -212,7 +235,17 @@ function stepRegisterMcp() {
   let touched = 0;
   for (const settingsPath of candidates) {
     info(`目标: ${settingsPath}`);
-    const cfg = readJsonSafe(settingsPath) || {};
+    const raw = readJsonSafe(settingsPath);
+
+    // JSON 损坏 → 报错退出，不覆盖用户文件
+    if (raw && raw.corrupted) {
+      err(`cline_mcp_settings.json 格式损坏，无法继续:`);
+      dim(`  ${raw.text}`);
+      info(`请手动修复该文件后重试，或暂用 --dry-run 检查其他步骤`);
+      return false;
+    }
+
+    const cfg = (raw && !raw.missing) ? raw : {};
     cfg.mcpServers = cfg.mcpServers || {};
 
     const existing = cfg.mcpServers["skills-mcp-server"];

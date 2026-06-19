@@ -139,13 +139,31 @@ export function hasGitDir(cwd = process.cwd()) {
  */
 export function normalizeRemoteUrl(url) {
   if (!url || typeof url !== "string") return null;
-  let u = url.trim().toLowerCase();
+  let u = url.trim();
+
+  // 去 userinfo（https://token@host/... → https://host/...）
+  u = u.replace(/^(https?:\/\/)[^@]+@/, "$1");
+
+  // 统一 protocol → https://
+  u = u.replace(/^(ssh:\/\/git@|git:\/\/)/, "https://");
 
   // SSH form: git@host:owner/repo(.git) → https://host/owner/repo
   const sshMatch = /^git@([^:]+):(.+)$/.exec(u);
   if (sshMatch) {
     u = `https://${sshMatch[1]}/${sshMatch[2]}`;
   }
+
+  // 解析 host + path，只 lower host（path 大小写可能语义相关，保守不动）
+  const urlMatch = /^(https?:\/\/)([^/]+)(\/.*)?$/.exec(u);
+  if (urlMatch) {
+    u = urlMatch[1] + urlMatch[2].toLowerCase() + (urlMatch[3] || "");
+  } else {
+    // 不认识的格式，全 lower 兜底
+    u = u.toLowerCase();
+  }
+
+  // 去 query 和 fragment
+  u = u.replace(/[?#].*$/, "");
 
   // 先去尾部 /（包括 .git/ 这种后接斜杠的情况）
   u = u.replace(/\/+$/, "");
