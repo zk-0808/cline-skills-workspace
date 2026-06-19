@@ -83,7 +83,7 @@
 高风险操作（需确认）：删除文件、git reset/hard、数据库变更、系统配置修改、**默认 Shell 切换**（影响后续工具观察）
 普通操作（可继续）：修改文件、运行测试、lint/format
 
-**Shell 切换前必须验证可观测性**：VS Code 集成终端只对官方支持的 Shell（zsh / bash / fish / PowerShell）启用 Shell Integration。切到 cmd.exe 之类不在列表的 Shell 会让 Cline 无法捕获命令输出，等同于盲打。修改 `terminal.integrated.defaultProfile.windows` 之前必须确认新 Shell 在支持列表内。
+**环境变更前必须验证可观测性**：任何影响命令执行、输出捕获、日志观察能力的变更（Shell / 终端 / 运行时 / 远程执行环境），必须先验证新环境支持命令输出被 Cline 正确捕获。当前主要验证方式是 VS Code Shell Integration（支持 zsh / bash / fish / PowerShell），但不排除未来出现新方案。切到不在支持列表的环境等同于盲打——修改 `terminal.integrated.defaultProfile.windows` 之前必须确认。
 
 ### 规范 2：禁止自问自答
 
@@ -159,13 +159,9 @@ PowerShell 7 同时满足：
 
 判定权交给用户，避免 Agent 误判。简单事实查询（版本号、语法、定义）跳过询问直接给结论。
 
-### 规范 8：搜索深度自适应
+### 规范 9：工作流与高风险操作的优先级
 
-默认执行单轮轻量搜索。得出初步结论后，若涉及决策、技术选型、对比、不可逆后果，**主动询问用户**：
-
-> "已得出初步结论。是否需要 use_skill('search-orchestrator') 进行深度调研（多假设/反证/分层证据）？"
-
-判定权交给用户，避免 Agent 误判。简单事实查询（版本号、语法、定义）跳过询问直接给结论。
+规范 5 定义的自动工作流（bugfix / refactor / research / feature）**不得绕过规范 1 的高风险确认要求**。当工作流步骤涉及高风险操作时，仍必须先取得用户授权。
 
 ---
 
