@@ -48,14 +48,48 @@
 
 ## 快速开始
 
-### 1. 安装 MCP server（运行时层）
+### 一键安装（推荐）
+
+```bash
+git clone https://github.com/zk-0808/cline-skills-workspace.git
+cd cline-skills-workspace
+node install.mjs
+```
+
+`install.mjs` 会自动完成：
+1. `skills-mcp-server` 依赖安装（`npm install`）
+2. 在 Cline 的 `cline_mcp_settings.json` **自动注册** `skills-mcp-server`（Windows / macOS / Linux 全部检测）
+3. 复制 `skills/` 全部目录到 `~/.claude/skills/`（Cline 全局发现）
+4. 跑 `validate-skills` + 全部 server 测试做 sanity check
+
+> Node 必须 ≥ **22.5**（启动期会预检；低版本直接拒绝，避免 `node:sqlite` 隐蔽报错）。
+
+完成后**重启 VS Code / Cursor** 即可。
+
+### 进阶选项
+
+```bash
+node install.mjs --dry-run     # 预览，不实际写入
+node install.mjs --force       # 覆盖已有配置
+node install.mjs --server-only # 只装 server
+node install.mjs --skills-only # 只复制 skills
+node install.mjs --no-test     # 跳过测试
+node install.mjs --help        # 显示全部参数
+```
+
+### 手动安装（如果一键失败）
+
+<details>
+<summary>展开 5 步手动流程</summary>
+
+#### 1. 安装 MCP server
 
 ```bash
 cd skills-mcp-server
 npm install
 ```
 
-然后在 Cline 的 `cline_mcp_settings.json` 注册：
+在 Cline 的 `cline_mcp_settings.json` 注册：
 
 ```json
 {
@@ -68,19 +102,19 @@ npm install
 }
 ```
 
-> Node 必须 ≥ **22.5**（启动期会预检；低版本直接拒绝启动，避免 `node:sqlite` 隐蔽报错）。
-
-### 2. 安装 Skills（提示词层）
-
-把 `skills/` 下任意目录复制到 Cline 配置目录：
+#### 2. 复制 Skills 到 Cline 全局目录
 
 ```bash
 cp -r skills/handoff-protocol ~/.claude/skills/
 cp -r skills/memory-keeper    ~/.claude/skills/
 cp -r skills/context-compactor ~/.claude/skills/
+# 或一次性全装：
+cp -r skills/*                 ~/.claude/skills/
 ```
 
-### 3. 体验跨会话连续性
+</details>
+
+### 体验跨会话连续性
 
 **会话 1**：完成一些工作后写交接：
 ```
@@ -229,7 +263,13 @@ cline-skills-workspace/
 
 ## 当前阶段
 
-**14 天 dogfooding sprint** — 通过实际使用验证 Project Continuity 体系价值，并落实外部评审反馈（见 [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) / [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md)）。
+**Dogfooding sprint**（2026-06-18 ~ 06-21，缩短为 3 天）— 通过实际使用验证 Project Continuity 体系价值，并落实外部评审反馈（见 [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) / [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md)）。
+
+Sprint 期间已完成的 P1：
+- ✅ external-review §6「Sprint 期内必做」全部 6 项（PRAGMA busy_timeout / handoff 原子写 / handler eager import / Node engines / escapeFts 转义 / 「零额外原生编译依赖」措辞）
+- ✅ `getProjectHashByGitUrl()` —— 跨设备稳定的项目身份键（为未来 P1.3 memory_export/import 准备）
+- ✅ `install.mjs` —— 一键安装脚本（替代 5 步手动配置）
+- ✅ Shell 基建：PowerShell 7 + Shell Integration（`&&` 链式 + 输出捕获）
 
 ---
 
