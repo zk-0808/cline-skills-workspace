@@ -4,13 +4,16 @@
 // ============================================================
 
 import path from "path";
+import fs from "fs";
 import {
   getActivePath,
   getArchivePath,
+  getArchiveDir,
   readFileSafe,
   atomicWriteFile,
   moveFile,
   ensureDir,
+  slugify,
 } from "../lib/handoff-fs.js";
 import {
   parseHandoff,
@@ -161,7 +164,12 @@ export async function handler(args = {}) {
       if (!goal || !String(goal).trim()) {
         return errorResult(
           "GOAL_REQUIRED_ON_FIRST_WRITE",
-          "首次创建 handoff 必须传 goal（一句话项目目标）。"
+          buildGoalRequiredDiagnostics({
+            branch,
+            activePath,
+            projectRoot,
+            local,
+          })
         );
       }
       newFm = buildFrontmatter({ branch, goal, status, cwd: projectRoot });
@@ -286,4 +294,83 @@ function errorResult(code, details) {
     ],
     isError: true,
   };
+}
+
+// ============================================================
+// GOAL_REQUIRED 诊断信息构造
+// ------------------------------------------------------------
+// 设计依据：docs/dogfooding-sprint-retrospective.md §1 Q2
+// 核心：active 文件不存在时报 GOAL_REQUIRED 是预期行为（done = 终态）
+//       但用户视角易误以为「同会话刚 resume 过应该能继续」
+//       → 错误信息必须明确：是新建语义 / active 期望路径 / 是否有归档候选
+// ============================================================
+
+function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }) {
+  const relActivePath =
+    path.relative(projectRoot, activePath).replace(/\\/g, "/") || activePath;
+
+  // 探测 archive 下是否有同 slug 候选（最近 3 个）
+  const slug = slugify(branch);
+  let archiveCandidates = [];
+  try {
+    const archiveDir = getArchiveDir({ local });
+    if (fs.existsSync(archiveDir)) {
+      archiveCandidates = fs
+        .readdirSync(archiveDir, { withFileTypes: true })
+        .filter(
+          (d) =>
+            d.isFile() &&
+            d.name.startsWith(`HANDOFF_${slug}_`) &&
+            d.name.endsWith(".md")
+        )
+        .map((d) => {
+          const fp = path.join(archiveDir, d.name);
+          return { name: d.name, mtime: fs.statSync(fp).mtimeMs };
+        })
+        .sort((a, b) => b.mtime - a.mtime)
+        .slice(0, 3);
+    }
+  } catch {
+    // archive 探测失败不影响主流程
+  }
+
+  const lines = [
+    `首次创建 handoff 必须传 \`goal\`（一句话项目目标）。`,
+    ``,
+    `### 📍 诊断`,
+    `- **branch**: \`${branch}\``,
+    `- **期望 active 路径**: \`${relActivePath}\` _(不存在)_`,
+    `- **写入语义**: 因 active 文件不存在，本次 write 视为**新建 handoff**`,
+  ];
+
+  if (archiveCandidates.length > 0) {
+    lines.push(
+      `- **同 slug 归档候选**: 检测到 ${archiveCandidates.length} 个最近归档文件：`,
+      ...archiveCandidates.map((c) => `    - \`${c.name}\``),
+      ``,
+      `> ⚠️ 上一个同 branch 的 handoff 已被归档（可能是 \`status=done\` 或手动归档）。`,
+      `> 这意味着旧任务在语义上已**结束**。如果你想：`,
+      `> - **延续旧任务的工作**：请显式传 \`goal\`（可从归档文件 read_file 复制旧 goal）`,
+      `> - **开始新任务**：传一个新的 \`goal\``
+    );
+  } else {
+    lines.push(
+      `- **同 slug 归档候选**: 无（archive 目录无同 branch 归档文件）`,
+      ``,
+      `> 这是该 branch 上的全新 handoff。请传 \`goal\` + 至少 1 项 \`next_action\`。`
+    );
+  }
+
+  lines.push(
+    ``,
+    `### 🔧 修复方法`,
+    `调用 \`handoff_write\` 时传：`,
+    `- \`goal\`: 一句话目标（≤120 字符）`,
+    `- \`next_action\`: 至少 1 项可执行动作`,
+    ``,
+    `> 💡 schema 语义：\`status=done\` 是**终态**，归档后 active 槽位释放，下次 write 即新建。`,
+    `> 详见 \`docs/handoff-schema.md\` §3 状态机。`
+  );
+
+  return lines.join("\n");
 }

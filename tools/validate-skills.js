@@ -189,6 +189,68 @@ function validateSkill(skillDir, skillNames) {
   }
 }
 
+/**
+ * 校验 .clinerules 不含本机化字符串（开发者层污染检查）。
+ *
+ * 命中 ERROR 的字符串：
+ *   - 绝对路径（含盘符）
+ *   - Shell 具体路径/版本（pwsh.exe / PowerShell 7 等）
+ *   - 本机环境特定（GBK 936 / Windows 11 中文系统 / Set-ExecutionPolicy 等）
+ *   - 环境变量占位符（%APPDATA% / %USERPROFILE% 等 — 仅限 cmd 风格）
+ */
+function validateClinerules() {
+  const clinerulesPath = path.join(__dirname, '..', '.clinerules');
+  if (!fs.existsSync(clinerulesPath)) {
+    warnings.push('[.clinerules] 文件不存在，跳过本机化检查');
+    return;
+  }
+
+  const content = fs.readFileSync(clinerulesPath, 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  // 绝对路径正则（Windows 盘符 + Unix 根路径）
+  const absPathPattern = /[A-Za-z]:[\\\\/][^\s`"')]*/;
+
+  // 本机化禁词（命中即 ERROR）
+  // 注意：不包含 Set-ExecutionPolicy — 规范 7 中作为通用指引提及是合理的（"若报错，提示用户执行..."）
+  const forbidden = [
+    { pattern: /pwsh\.exe/i, desc: 'Shell 可执行文件名 pwsh.exe（若为通用指引，用"PowerShell"即可）' },
+    { pattern: /GBK\s*936/, desc: '本机代码页 GBK 936' },
+    { pattern: /Windows 11 中文系统/, desc: '本机系统描述（Windows 11 中文系统）' },
+    { pattern: /%APPDATA%/, desc: 'cmd 风格环境变量 %APPDATA%' },
+    { pattern: /%USERPROFILE%/, desc: 'cmd 风格环境变量 %USERPROFILE%' },
+    { pattern: /terminal\.integrated\.defaultProfile\.windows/, desc: 'VS Code settings.json 本机 Shell 配置 key' },
+    { pattern: /19936/, desc: '本机用户名 19936' },
+    { pattern: /23\.04\.0/, desc: '本机 Node 小版本号' },
+    { pattern: /v24\.15/i, desc: '本机 Node 精确版本号 v24.15' },
+  ];
+
+  // 检查每行
+  for (let i = 0; i < lines.length; i++) {
+    const lineNum = i + 1;
+    const line = lines[i];
+
+    // 跳过注释行和空行（注释行允许引用规范编号，如 "规范 7 本机规则"）
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+
+    // 检查绝对路径（但跳过规范 7 中"DEV_NOTES.md"这类无害引用）
+    const absMatch = line.match(absPathPattern);
+    if (absMatch) {
+      errors.push(`[.clinerules:${lineNum}] 含绝对路径 "${absMatch[0]}" — 应放入 DEV_NOTES.md`);
+      continue; // 不再报同行的禁词
+    }
+
+    // 检查禁词
+    for (const f of forbidden) {
+      if (f.pattern.test(line)) {
+        errors.push(`[.clinerules:${lineNum}] 含本机化内容 (${f.desc}) — 应放入 DEV_NOTES.md`);
+        break; // 每行只报一次
+      }
+    }
+  }
+}
+
 function main() {
   console.log('=== Skills Validator v1.0 ===\n');
   console.log(`Spec: ${SPEC_FILE}`);
@@ -207,6 +269,9 @@ function main() {
     validateSkill(skillDir, skillNames);
   }
   
+  // 额外校验：.clinerules 不含本机化污染
+  validateClinerules();
+
   // 输出报告
   console.log('═'.repeat(60));
   console.log('校验报告');
@@ -225,7 +290,7 @@ function main() {
   console.log(`\n══════════════════════════════`);
   console.log(`总计: ${skillNames.length} 个 Skill`);
   console.log(`错误: ${errors.length}, 警告: ${warnings.length}`);
-  
+
   if (errors.length === 0) {
     console.log(`\n✅ 所有 Skill 通过校验!`);
     process.exit(0);

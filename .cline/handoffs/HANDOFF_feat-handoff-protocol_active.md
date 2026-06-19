@@ -2,67 +2,51 @@
 schema_version: "1.0"
 status: active
 branch: feat/handoff-protocol
-goal: 通过 dogfooding sprint 验证体系价值并落实外部评审反馈；本会话完成 Shell 基建 + project-hash 跨设备
-  fallback + 一键安装脚本
+goal: feat/handoff-protocol 收尾 → P0-A memory_export/import 设计文档 → PR 合并
 created_at: 2026-06-19T13:04:12+08:00
-updated_at: 2026-06-19T13:04:12+08:00
+updated_at: 2026-06-20T00:33:49+08:00
 project_hash: 6ba9751232ab
 ---
 
 ## completed
-- Phase 2A 基础库 + 58/58 单元测试全绿
-- Phase 2B handoff_write/resume handlers 完成
-- 外部评审反馈落实（README/positioning/interview-answers）
-- feat/handoff-protocol 分支已 push 到远程
-- [2026-06-19 早] cmd.exe 切换 → 实测发现 Shell Integration 缺失
-- [2026-06-19 中] winget install Microsoft.PowerShell（pwsh 7.6.2 → C:/Program Files/PowerShell/7/）
-- [2026-06-19 中] settings.json profile → PowerShell 7（显式路径）
-- [2026-06-19 中] .clinerules 规范 7 二次重写：PS 7 主路径，cmd/PS5.1 兜底
-- [2026-06-19 中] LEARNINGS.md 追加 Q0-Q5 折返复盘（Shell Integration 维度被遗漏）
-- [2026-06-19 中] Unblock-File 解决 RemoteSigned 仍拦截 npm.ps1（NTFS Zone.Identifier 标记）
-- [2026-06-19 中] memory 同步：#27 PS7 偏好 + #28 unblock 教训（删 #26 cmd 偏好）
-- [2026-06-19 下] external-review §6「Sprint 期内必做」6 项全部核对 ✅
-- [2026-06-19 下] D2: lib/git.js 加 normalizeRemoteUrl + getRemoteUrl
-- [2026-06-19 下] D2: lib/db.js 加 getProjectHashByGitUrl（不替代旧 hash，保持兼容）
-- [2026-06-19 下] D2: 写 test-project-hash.js（23/23），全测 132/132 通过
-- [2026-06-19 下] D1: install.mjs 一键安装脚本（跨平台 + 自动检测 Cline settings + 彩色输出）
-- [2026-06-19 下] install.mjs --dry-run 实测通过
-- [2026-06-19 下] README 改 1 行命令安装，5 步手动流程折叠为 details
-- [2026-06-19 下] validate-skills.js: 0 errors / 4 warnings
+- feat/handoff-protocol 主功能实现（handoff_write / handoff_resume / handoff-fs / handoff-schema）
+- Memory 系统基础 CRUD（memory_commit / memory_recall / memory_list）
+- compact_context 工具
+- getProjectHashByGitUrl 跨设备 hash 实现（不替代现有 hash）
+- 测试套件（test-handoff-handlers / test-handoff-lib / test-memory / test-project-hash / test-escape-fts）
+- 外部评审反馈修复（2026-06-18）
+- 工具校验脚本 tools/validate-skills.js
+- 7 个 SKILL.md 完整化（2026-06-18 sprint）
+- P0-A：docs/memory-export-import-design.md 设计文档完成
 
 ## in_progress
 
 ## next_action
-- git status 检查未提交改动 → git add . → git commit -m 'feat: PS7 + project-hash git URL fallback + install.mjs'
-- git push origin feat/handoff-protocol → 在 GitHub 开 PR
-- Sprint 06-21 结束日 → 写 dogfooding-sprint-retrospective.md（基于这 3 天观察）
-- Sprint 后可选 P1：memory_export/import（用 getProjectHashByGitUrl 作为绑定键）/ benchmark 标注样本
+- 用 finishing-a-development-branch 流程创建 PR 合并到 main
+- [未来 feat/test-isolation 分支]：让 handoff handler 接受可选 cwd 参数
+- [未来 产品方向决策]：tools/*.mjs 分发策略
+- [未来 skills/session-archaeology]：工具升级为正式 Skill
+- P1 待评估：调研 Cline 原生 /compact 实现
 
 ## do_not
-- 不要新增 P0 功能（Sprint 期间只做验证 + 修复，不扩展）
-- 不要触碰主动『不做清单』方向（向量库 / Web UI / LLM in server）
-- 不要继续说『零 native 依赖』，必须改为『零额外原生编译依赖』
+- 不要把 install.mjs 改回 .js（用户文件 = 神圣，T-05）
+- 不要替换 getProjectHash 为 getProjectHashByGitUrl（26+ memory 会看似消失，D-06）
+- 不要把默认 Shell 切回 cmd.exe（无 Shell Integration，规范 1）
+- 不要在 P0-C README Before/After 之前先实现 benchmark 框架（避免「先宣传后补证据」）
+- 不要给 GOAL_REQUIRED 拆多个错误码（GPT 评审：单错误码 + diagnostics 已足够）
+- 不要让 handoff_write 自动从 archive 继承旧 goal（违反 T-05 + 混淆延续/新建语义）
+- 不要在链式命令中裸用 git log/diff/show（规范 10：必须 git --no-pager <cmd>）
+- 不要把 P0-A export/import 设计文档塞进收尾会话（应单独发起聚焦会话）
 - 不要直接合并到 main（必须通过 PR 评审）
-- 不要再往 .clinerules 规范 7 加 PowerShell/cmd 绕过指令——PS 7 主路径已根治
-- 不要切换默认 Shell 为 cmd.exe（缺 Shell Integration，命令输出会丢失）
-- 不要替换 getProjectHash 为 getProjectHashByGitUrl（会让现有 26+ 条 memory 和 active handoff 看似消失，需先实现 memory_export/import 迁移）
-- 不要把 install.mjs 改回 .js（根 package.json 是 commonjs，必须保持 .mjs 扩展名）
+- 在跑 skills-mcp-server/test-handoff-handlers.js 之前要意识到它会污染真实 .cline/handoffs/active 文件 — 跑前先 git stash 或备份 active；根本修复待 feat/test-isolation 分支
+- 不要新增 P0 功能（Sprint 期间只做验证 + 修复，不扩展）
 
 ## artifacts
-- skills-mcp-server/handlers/handoff-resume.js
-- skills-mcp-server/handlers/handoff-write.js
-- skills-mcp-server/lib/handoff-schema.js
-- skills-mcp-server/lib/handoff-fs.js
-- skills-mcp-server/lib/git.js
-- skills-mcp-server/lib/db.js
-- skills-mcp-server/index.js
-- skills-mcp-server/test-project-hash.js
-- skills/handoff-protocol/SKILL.md
-- docs/handoff-schema.md
-- docs/dogfooding-sprint.md
-- docs/dogfooding-log.md
-- docs/external-review-2026-06-18.md
 - .clinerules
+- DEV_NOTES.md
 - LEARNINGS.md
-- install.mjs
-- README.md
+- tools/validate-skills.js
+- docs/memory-export-import-design.md（待新建，P0-A）
+- skills-mcp-server/handlers/handoff-write.js
+- skills-mcp-server/handlers/handoff-resume.js
+- skills-mcp-server/test-handoff-handlers.js
