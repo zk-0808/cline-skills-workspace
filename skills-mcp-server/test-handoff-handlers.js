@@ -233,6 +233,72 @@ async function run() {
     assertContains(getText(r), "NO_HANDOFF");
   });
 
+  // ============== Bug 边界：done → 再次 write 不传 goal（语义边界）==============
+  // 见 docs/dogfooding-sprint-retrospective.md §1 Q2
+  // 设计语义：done 是终态，归档后 active 槽空 → 下次 write 在语义上是「新建」
+  // 但用户体验上易误以为「同会话内仍能延续」→ 错误信息必须含足够诊断
+  console.log("\n📦 done 后再次 write 的诊断信息");
+
+  await test("done 后 write 不传 goal：仍报 GOAL_REQUIRED（预期行为）", async () => {
+    cleanup();
+    // 1. 首次创建
+    let r = await writeHandler({
+      goal: "终态边界测试",
+      next_action: ["x"],
+    });
+    assert(!r.isError, getText(r));
+    // 2. 归档
+    r = await writeHandler({ status: "done" });
+    assert(!r.isError, getText(r));
+    assert(!fs.existsSync(activeFile), "归档后 active 应不存在");
+    // 3. 再 write 不传 goal
+    r = await writeHandler({ completed: ["延续？"] });
+    assert(r.isError, "应报错（语义上视为新建）");
+    assertContains(getText(r), "GOAL_REQUIRED_ON_FIRST_WRITE");
+  });
+
+  await test("诊断信息：含 active 期望路径", async () => {
+    cleanup();
+    const r = await writeHandler({ completed: ["x"] });
+    assert(r.isError, "应报错");
+    const text = getText(r);
+    assertContains(text, "GOAL_REQUIRED_ON_FIRST_WRITE");
+    // 期望诊断含期望路径
+    assertContains(text, ".cline/handoffs/HANDOFF_");
+  });
+
+  await test("诊断信息：active 不存在 + archive 也无候选 → 标记新建", async () => {
+    cleanup();
+    // 确保 archive 下没有同 slug 文件
+    if (fs.existsSync(archiveDir)) {
+      for (const f of fs.readdirSync(archiveDir)) {
+        if (f.startsWith(`HANDOFF_${slug}_`)) {
+          fs.unlinkSync(path.join(archiveDir, f));
+        }
+      }
+    }
+    const r = await writeHandler({ completed: ["x"] });
+    assert(r.isError, "应报错");
+    const text = getText(r);
+    // 必须明示这是「新建」语义，并且诊断告知 active/archive 都没找到
+    assertContains(text, "新");  // "新建" 或 "新 handoff"
+  });
+
+  await test("诊断信息：归档后再 write → 提示存在归档候选", async () => {
+    cleanup();
+    // 1. 写一个 + 归档
+    let r = await writeHandler({ goal: "存档测试", next_action: ["y"] });
+    assert(!r.isError, getText(r));
+    r = await writeHandler({ status: "done" });
+    assert(!r.isError, getText(r));
+    // 2. 不传 goal 再 write
+    r = await writeHandler({ completed: ["延续？"] });
+    assert(r.isError, "应报错");
+    const text = getText(r);
+    // 必须告知用户「最近归档了 1 个同 slug 的 handoff」+ 提示是否要新建
+    assertContains(text, "归档");
+  });
+
   // ============== 清理 ==============
   cleanup();
 }

@@ -206,6 +206,31 @@ project_hash: 6ba9751232ab
 | `stale` → `active` | `handoff_resume` 经用户确认后 | 恢复 status，更新 `updated_at` |
 | 任意 → `archive/` | `done` 或用户显式归档 | 物理移动文件，从 active 槽位释放 |
 
+### 3.4 终态语义（重要）
+
+> **`status = done` 是该 handoff 的终态。归档后 active 槽位释放；下次 `handoff_write` 在语义上是「新建 handoff」，必须传 `goal`。**
+
+这条规则看起来显然，但在实际使用中容易踩坑（见 `docs/dogfooding-sprint-retrospective.md` §1 Q2）：
+
+| 错误心智模型 | 正确心智模型 |
+|---|---|
+| "同会话内 resume 过 → 一直能继续 write" | "active 文件存在 → 才是 update；不存在 → 一律是新建" |
+| "done 之后还能再 write 把 status 改回 active" | "done 是终态，归档后想继续工作 = 新建 handoff" |
+
+**实操约束**：
+- `status: done` 是**最终写**：所有想记录的内容（completed / next_action / artifacts）必须在 `done` 之**前或同时**写完
+- `done` 之后如果用户仍想继续工作，应**显式开启新 handoff**（重传 `goal`），不要期望延续旧文件
+- 如果旧 goal 还有用，可以从 `archive/` 下 `read_file` 复制旧 goal 后传入新 write
+
+**实现侧的诊断信息**：
+- 当 active 不存在但用户调用 `handoff_write` 不传 `goal` 时，错误码 `GOAL_REQUIRED_ON_FIRST_WRITE` 会附带：
+  - 期望 active 路径（确认是否定位到对的文件）
+  - 同 slug 的 archive 候选（最近 3 个）
+  - 写入语义判定（"视为新建 handoff"）
+  - 修复建议（传 goal 即可）
+
+详见 `skills-mcp-server/handlers/handoff-write.js` 的 `buildGoalRequiredDiagnostics`。
+
 ---
 
 ## 4. 校验规则（`handoff_validate`）
