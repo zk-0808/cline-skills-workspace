@@ -1,31 +1,35 @@
 ---
 schema_version: "1.0"
-status: blocked
+status: active
 branch: chore/v1.0-freeze-p0
 goal: v1.0 MVP 冻结宣布 — 等待用户外部评审确认
 created_at: 2026-06-20T01:48:58+08:00
-updated_at: 2026-06-20T01:57:15+08:00
+updated_at: 2026-06-20T12:10:18+08:00
 project_hash: 6ba9751232ab
 ---
 
 ## completed
-- P0-1: GOAL_REQUIRED 诊断增强
-- P0-2: README 同步（109→141 测试、Sprint→v1.0 MVP）
-- 规范 10 第 5 类陷阱 + DEV_NOTES Q0-Q5 + LEARNINGS FAQ
-- 路线图 v2.0 §5b 实际执行轨迹
-- 分支分叉消除（rebase 到 origin/main）
-- GOAL_REQUIRED 回归测试 19/19
-- PR #10 合并到 main
+- 恢复 handoff 状态，确认 blocked 原因为 4 项外部评审
+- 评审项 ② .clinerules 规范 10 第5类通用化（emoji 降级为示例，补充核心触发条件）
+- 评审项 ① LEARNINGS/DEV_NOTES 知识蒸馏迁移（LEARNINGS 修复结构+填充3条蒸馏经验，DEV_NOTES 5个案例添加反向导航）
+- 评审项 ③ 路线图 §5b 'Runtime Layer' → 'Project Continuity Layer'（6处替换+命名说明段）
+- 评审项 ④ GOAL_REQUIRED 诊断优化（status=done 前移顶部+去误用措辞+slug→branch+active槽位已释放+首句新建）
+- 修复 validate-skills.js 报错（.clinerules 示例去 GBK 936 本机值）
+- 校验通过：validate 0 ERROR，handoff 测试 19/19
+- 恢复测试污染的 active handoff 文件
+- 用户外部审核通过（LGTM），commit fc216ad
 
 ## in_progress
 
 ## next_action
-- 用户对本次会话的全部改动进行外部评审，评审范围：① LEARNINGS/DEV_NOTES 架构拆分 ② .clinerules 规范 10 第5类+规范7 PS7警告 ③ 路线图 v2.0 §5b ④ GOAL_REQUIRED 诊断措辞
-- 评审通过后 → 宣布 v1.0 MVP 冻结 → merge chore/v1.0-freeze-p0 剩余 commit 到 main
+- 用户确认 merge 策略（fast-forward 或 --no-ff）和推送授权
+- merge chore/v1.0-freeze-p0 到 main
+- 宣布 v1.0 MVP 冻结（handoff status=done 归档）
+- 推送 main 到 origin（高风险，需二次确认）
 
 ## do_not
-- 在用户确认前宣布冻结
-- 继续新增功能
+- 在用户确认 merge 策略和推送授权前执行 merge
+- 直接 git push 未经二次确认
 - 在 rebase 后 push force 之外再加任何提交
 
 ## artifacts
