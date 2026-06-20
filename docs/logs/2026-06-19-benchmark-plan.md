@@ -1,7 +1,7 @@
 # Benchmark Plan · 回答「BM25 什么时候不够」
 
 > **状态**：📐 设计（2026-06-19 写）；尚未跑数据，先建立衡量标尺
-> **上层锚点**：[external-review-2026-06-18.md §1.1 / §5 Q1](./external-review-2026-06-18.md)、[product-positioning.md §3 不做向量库的判定](./product-positioning.md)
+> **上层锚点**：[external-review-2026-06-18.md §1.1 / §5 Q1](../reviews/2026-06-18-external-review.md)、[product-positioning.md §3 不做向量库的判定](../product-positioning.md)
 > **目的**：把「BM25 已够用」从推测变成可证伪的证据，符合宪法一
 
 ---
@@ -30,7 +30,7 @@
 
 ### Q2：中文召回率（unicode61 不分词）相对英文有多大衰减？
 
-`docs/external-review-2026-06-18.md §2.1` 提示 **unicode61 默认不分中文词**——这可能是最先暴露的瓶颈。需要量化：
+`docs/reviews/2026-06-18-external-review.md §2.1` 提示 **unicode61 默认不分中文词**——这可能是最先暴露的瓶颈。需要量化：
 
 | 测试 | 期望 |
 |---|---|
@@ -75,7 +75,7 @@
 | **同义词召回率** < **30%**（Iranti / Memorix 此项天然胜出） |
 | **跨语言查询命中** < **20%**（"OAuth 实现" 应能命中"鉴权 token 验证"） |
 
-⚠️ **关键**：达到极限阈值不等于 "立刻引入向量库"——还要算复杂度成本（node-gyp / embedding API 费 / 模型版本一致性）。详见 `docs/interview-answers.md`。
+⚠️ **关键**：达到极限阈值不等于 "立刻引入向量库"——还要算复杂度成本（node-gyp / embedding API 费 / 模型版本一致性）。详见 `docs/reviews/2026-06-18-interview-answers.md`。
 
 ---
 
@@ -281,7 +281,7 @@ external-review §6 列了 8 项 Sprint 后必做。benchmark 是其中之一。
 
 ## 附录 B：相关文档
 
-- [external-review-2026-06-18.md](./external-review-2026-06-18.md) §1.1 / §2.1 / §5 Q1
-- [interview-answers.md](./interview-answers.md) BM25 选择的论证链
-- [product-positioning.md](./product-positioning.md) §3 不做向量库的边界
-- [skills-mcp-server/handlers/memory-recall.js](../skills-mcp-server/handlers/memory-recall.js) escapeFts 实现
+- [external-review-2026-06-18.md](../reviews/2026-06-18-external-review.md) §1.1 / §2.1 / §5 Q1
+- [interview-answers.md](../reviews/2026-06-18-interview-answers.md) BM25 选择的论证链
+- [product-positioning.md](../product-positioning.md) §3 不做向量库的边界
+- [skills-mcp-server/handlers/memory-recall.js](../../skills-mcp-server/handlers/memory-recall.js) escapeFts 实现

@@ -299,7 +299,7 @@ function errorResult(code, details) {
 // ============================================================
 // GOAL_REQUIRED 诊断信息构造
 // ------------------------------------------------------------
-// 设计依据：docs/dogfooding-sprint-retrospective.md §1 Q2
+// 设计依据：docs/logs/2026-06-18-dogfooding-sprint-retrospective.md §1 Q2
 // 核心：active 文件不存在时报 GOAL_REQUIRED 是预期行为（done = 终态）
 //       但用户视角易误以为「同会话刚 resume 过应该能继续」
 //       → 错误信息必须明确：是新建语义 / active 期望路径 / 是否有归档候选

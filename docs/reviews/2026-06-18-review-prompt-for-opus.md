@@ -185,6 +185,6 @@ https://github.com/zk-0808/cline-skills-workspace
 - `skills-mcp-server/handlers/memory-recall.js`（FTS5 检索）
 - `skills-mcp-server/handlers/handoff-write.js` 和 `handoff-resume.js`（handoff 状态机）
 - `skills-mcp-server/handlers/compact-context.js`（确认无 LLM 调用）
-- `docs/dogfooding-sprint.md`（当前 14 天验证 sprint）
+- `docs/logs/2026-06-18-dogfooding-sprint.md`（当前 14 天验证 sprint）
 
 如果你发现我的描述与代码不一致，请优先指出，再继续评审。

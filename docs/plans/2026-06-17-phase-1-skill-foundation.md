@@ -663,7 +663,7 @@ min_cline_version: "3.0.0"
 2. 逐项提问澄清需求（每次一个问题）
 3. 提出 2-3 种方案，说明利弊
 4. 逐节呈现设计方案，等待用户确认
-5. 撰写设计文档到 `docs/superpowers/specs/`
+5. 撰写设计文档到 `docs/specs/`
 ```
 
 **注意**：这些章节标记可以放在正文开头，也可以合并进原有 Checklist 附近。保持原文 `# Brainstorming Ideas Into Designs` 作为总标题不变，在其后添加章节标记，然后保留 `## Anti-Pattern` 及之后的所有原文内容。
@@ -690,7 +690,7 @@ mkdir -p skills/brainstorming/examples
 4. 用户选择方案 2，Agent 逐节呈现设计
 5. 生成 spec 文档
 
-**输出**: `docs/superpowers/specs/2026-xx-xx-tag-system-design.md`
+**输出**: `docs/specs/2026-xx-xx-tag-system-design.md`
 
 ## 示例 2: 重构方案设计
 
@@ -1266,7 +1266,7 @@ cp -r skills/brainstorming ~/.claude/skills/
 
 ## 技能标准
 
-每个 Skill 遵循 [SKILL.md 规范](docs/skill-spec.md) — 12 个必填 frontmatter 字段，4 个正文章节。
+每个 Skill 遵循 [SKILL.md 规范](../skill-spec.md) — 12 个必填 frontmatter 字段，4 个正文章节。
 
 所有 Skill 通过 `tools/validate-skills.js` 自动校验:
 

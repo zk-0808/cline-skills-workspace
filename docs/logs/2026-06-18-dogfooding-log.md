@@ -1,7 +1,7 @@
 # Dogfooding Sprint 日志
 
 > **起止**：2026-06-18 → 2026-07-02
-> **规则**：见 [dogfooding-sprint.md](dogfooding-sprint.md)
+> **规则**：见 [dogfooding-sprint.md](2026-06-18-dogfooding-sprint.md)
 > **本体系组件**：handoff_write / handoff_resume / memory_commit / memory_recall / compact_context
 
 ---
@@ -47,7 +47,7 @@
 
 ### 会话：Sprint 首日（夜） — 落实外部评审 §6 的 6 项必做修复
 
-**目标**：把 `docs/external-review-2026-06-18.md` §6 Sprint 期内 6 项必做全部落实
+**目标**：把 `docs/reviews/2026-06-18-external-review.md` §6 Sprint 期内 6 项必做全部落实
 
 **使用情况记录：**
 

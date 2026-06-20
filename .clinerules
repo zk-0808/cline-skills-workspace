@@ -87,6 +87,11 @@
 
 **环境变更前必须验证可观测性**：任何影响命令执行、输出捕获、日志观察能力的变更（Shell / 终端 / 运行时 / 远程执行环境），必须先验证新环境支持命令输出被 Agent 正确捕获。Cline / Cursor 等基于 VS Code 的客户端目前依赖 VS Code Shell Integration（官方支持 zsh / bash / fish / PowerShell；不在列表的环境等同于盲打）。切换 Shell / 默认 profile 前必须确认目标环境在支持列表内。
 
+**终端虚响应检测**：`execute_command` 返回 "The command's output could not be captured" 或无实质 stdout/stderr 时，**不可视为操作已成功**。终端可能已卡死但报告了假成功。检测方式：
+- 使用 `node -e "console.log('probe')"` 等**短命令**（<200 chars，不含管道）确认终端存活
+- 或用 `read_file` 直接检查目标文件是否实际被修改
+- 若探针也超时或无返回，终端已死——不可再用 `node -e` 诊断，切换至 `cmd /c` 或文件层面验证
+
 ### 规范 2：提问时机与阻塞信号
 
 > Cline 原生系统提示已规定「不确定时用 ask_followup_question」「vague request 必须先 clarify」。
@@ -193,8 +198,32 @@ node tools/validate-skills.js   # 零 ERROR 才可推送
    - 核心触发条件：管道 + 非 UTF-8 编码 + 交互式/多步脚本块 + 高位 Unicode payload（emoji、CJK 扩展区等 4 字节字符为高风险）
    - 示例：PowerShell + 非 UTF-8 代码页（如中文 Windows 默认）+ `| ForEach-Object { ... }` + emoji 输出（✅❌⚠️🔍）挂起
    - 改写：拆为单步命令（无管道）；或用 `cmd /c "..."` 绕过 PS 管道；或用 `node -e "..."` 做文件扫描/文本处理
+6. **超长内联命令陷阱**：超长（>2KB）`node -e "..."` 内联命令在 PowerShell 中可能导致 PSReadLine 缓冲区溢出，终端卡死但仍返回假成功。
+   - 核心触发条件：`node -e` 或 `node --input-type=module -e` 字符串 > 2KB + 含大量反引号/CJK 字符
+   - 检测信号：`Oops, something went wrong. Please report this bug` + `IndexOutOfRangeException`
+   - 改写：将脚本写入独立 .mjs 文件后执行 `node <file>.mjs`，而非内联
 
-链式命令中只要有一段命中以上任一项，整条命令都视为有阻塞风险——拆成多次 `execute_command`，每次只跑一段。若已经因管道挂起而超时无返回，第一时间换 `cmd /c` 或 `node -e` 路径重试诊断。
+链式命令中只要有一段命中以上任一项，整条命令都视为有阻塞风险——拆成多次 `execute_command`，每次只跑一段。若已经因管道挂起而超时无返回，第一时间换 `cmd /c` 或 `node -e` **(仅限 <200 chars 的短命令)** 路径重试诊断。
+
+### 规范 11：工作目录边界（Platform ≠ User Project）
+
+> 本节对应 `docs/product-positioning.md` §6.4 Workspace Boundary。修改本节需同步更新定位文件。
+
+**核心约束**：Agent 的通用文件操作（`write_to_file` / `replace_in_file` / `execute_command`）默认应以**用户项目根**为目标，不得将平台仓库当成普通业务项目进行修改。
+
+**边界划分**：
+
+| 目录 | 角色 | 写入约束 |
+|------|------|---------|
+| `skills/`、`skills-mcp-server/`、`tools/`、`docs/`、根目录治理文件（`.clinerules`、`LEARNINGS.md` 等） | 平台自身 | ❌ 禁止写入，除非用户显式要求维护平台 |
+| 平台仓库根下的 `.gitignore`、`README.md`、`package.json` 等 | 平台配置文件 | ⚠️ 允许修改，但需附带说明 |
+| 用户项目根（任意独立 git 仓库或工作目录） | 用户工程 | ✅ 正常操作 |
+
+**判断依据**：当 `process.cwd()` 落在此仓库（`cline-skills-workspace`）时，等效于用户工程根——`handoff` / `memory` 工具正常使用、平台文件维护性修改（如本规范指定）允许。但**将平台仓库作为演示/学习/测试工程进行的结构性修改**（如新增业务代码、运行无关联的 npm 包、调试不相关脚本）必须用户显式确认。
+
+**检测时机**：收到写操作任务时 + 涉及平台目录列表中的路径时，检查任务意图是否超出"维护平台自身"范围。
+
+**例外**：Dogfooding 验证（Sprint 期间故意使用平台仓库作为工程）不受本规范限制——这是平台自身的验证流程。
 
 ---
 

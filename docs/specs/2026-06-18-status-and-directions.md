@@ -1,7 +1,7 @@
 # 2026-06-18 状态梳理与方向决策
 
 > 目的：收口 2026-06-17~18 几次发散讨论产生的零散观察，给"近期下一步做什么"一个明确的优先级排序。
-> 上层锚点：[`docs/product-positioning.md`](product-positioning.md) §1（一句话定位）+ §3（不做列表）+ §7（MVP 范围）
+> 上层锚点：[`docs/product-positioning.md`](../product-positioning.md) §1（一句话定位）+ §3（不做列表）+ §7（MVP 范围）
 > 不替代 product-positioning，仅做近期落地决策。
 
 ---
@@ -24,7 +24,7 @@
 
 完成 P0 后最常见的错误：「P0 完成 → 发现新想法 → 再加一个 P0 → 永远没有完成」。
 
-近期已出现的"挤进核心"倾向：ChatGPT 第二意见 / Browser Automation / 新 Skill / 新 Workflow。**全部押后**——见 [`dogfooding-sprint.md`](./dogfooding-sprint.md) 验证完成前不再扩 P0。
+近期已出现的"挤进核心"倾向：ChatGPT 第二意见 / Browser Automation / 新 Skill / 新 Workflow。**全部押后**——见 [`dogfooding-sprint.md`](../logs/2026-06-18-dogfooding-sprint.md) 验证完成前不再扩 P0。
 
 ### 三个待验证问题（非代码问题）
 
@@ -32,7 +32,7 @@
 2. **handoff 字段对不对**？是否缺字段、字段冗余、用户懒得填？
 3. **memory 和 handoff 是否重叠**？真实使用中边界是否清晰？
 
-详见 [`docs/dogfooding-sprint.md`](./dogfooding-sprint.md)。
+详见 [`docs/logs/2026-06-18-dogfooding-sprint.md`](../logs/2026-06-18-dogfooding-sprint.md)。
 
 ---
 
@@ -245,7 +245,7 @@ ChatGPT 第二意见自动化——回答动机问题后再定。
 | `.clinerules` | 新增规范 8（搜索深度自适应） | 解决 search-orchestrator 触发悖论 |
 | `LEARNINGS.md` | 追加「证据没有时间戳」复盘 | 沉淀认知教训 |
 | `skills-mcp-server` memory | id 17 procedural（短回复偏好） | 跨会话指导 Agent 风格 |
-| `docs/2026-06-18-status-and-directions.md` | 新建 | 收口本次发散 |
+| `docs/specs/2026-06-18-status-and-directions.md` | 新建 | 收口本次发散 |
 | `skills/{pptx,dispatching-parallel-agents,subagent-driven-development}` → `archive/skills/` | 归档 3 个 | 减少 ~300-450 token / 会话 |
 | `skills-mcp-server/handlers/handoff-write.js` | 新建 | handoff_write MCP 工具 |
 | `skills-mcp-server/handlers/handoff-resume.js` | 新建 | handoff_resume MCP 工具 |

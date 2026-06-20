@@ -13,4 +13,4 @@
 4. 用户选择方案 2，Agent 逐节呈现设计
 5. 生成 spec 文档
 
-**输出**: `docs/superpowers/specs/YYYY-MM-DD-tag-system-design.md`
+**输出**: `docs/specs/YYYY-MM-DD-tag-system-design.md`

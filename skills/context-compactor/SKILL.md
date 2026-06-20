@@ -55,7 +55,7 @@ min_cline_version: "3.0.0"
   "args": {
     "objective": "为 skills-mcp-server 增加跨会话记忆系统 (MVP)",
     "progress_done": [
-      "完成 docs/gap-analysis-runtime-layer.md 差距分析",
+      "完成 docs/specs/2026-06-18-gap-analysis-runtime-layer.md 差距分析",
       "实现 lib/db.js 与 4 个 handler",
       "通过单元测试 test-memory.js"
     ],
@@ -71,12 +71,12 @@ min_cline_version: "3.0.0"
     "key_files": [
       "skills-mcp-server/lib/db.js",
       "skills-mcp-server/handlers/memory-commit.js",
-      "docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md"
+      "docs/plans/2026-06-18-context-and-memory-mvp.md"
     ],
     "open_questions": [
       "是否需要在 .clinerules 加规范 8 — 强制新会话首步 memory_recall？"
     ],
-    "next_action": "读取 docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md 第 6 节，按其中 README 模板更新 README.md",
+    "next_action": "读取 docs/plans/2026-06-18-context-and-memory-mvp.md 第 6 节，按其中 README 模板更新 README.md",
     "persist": true
   }
 }

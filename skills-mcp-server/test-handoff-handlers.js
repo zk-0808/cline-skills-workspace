@@ -234,7 +234,7 @@ async function run() {
   });
 
   // ============== Bug 边界：done → 再次 write 不传 goal（语义边界）==============
-  // 见 docs/dogfooding-sprint-retrospective.md §1 Q2
+  // 见 docs/logs/2026-06-18-dogfooding-sprint-retrospective.md §1 Q2
   // 设计语义：done 是终态，归档后 active 槽空 → 下次 write 在语义上是「新建」
   // 但用户体验上易误以为「同会话内仍能延续」→ 错误信息必须含足够诊断
   console.log("\n📦 done 后再次 write 的诊断信息");

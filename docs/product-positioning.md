@@ -210,6 +210,36 @@ handoff_write --local
 | `git log` 被淹没 | `handoff_resume` 默认只看 `status: active`；INDEX.md 自动维护 |
 | 命名冲突 | 文件名格式固定：`HANDOFF_<branch>_active.md`；归档时加日期 |
 
+### Workspace Boundary（平台仓库 ≠ 用户工程）
+
+> 本节为 2026-06-20 补充，对应 `.clinerules` 规范 11。修改本节需同步更新规范 11 与 `skills-mcp-server/test-isolation.js`。
+
+**核心原则**：
+
+> **Platform repository is not the default workspace for user development.**
+> 平台仓库（本仓 `cline-skills-workspace`）是工具的源代码，不是用户开发业务的默认工作目录。
+
+**边界划分**：
+
+| 角色 | 目录 | 职责 |
+|------|------|------|
+| 平台自身 | `skills/`、`skills-mcp-server/`、`tools/`、`docs/`、根目录治理文件 | 平台源代码与治理文档，用户只读（除非显式维护平台） |
+| 用户工程 | 用户自己的项目根（独立 git 仓库，如 `~/projects/my-app`） | 用户业务代码 + 该项目自己的 `.cline/handoffs/` |
+
+**存储隔离已实现**（代码实测 `lib/handoff-fs.js` + `lib/db.js`）：
+
+- `memory` 写入路径 = `~/.cline-skills/memory/<sha256(projectRoot)[:12]>/memory.db` — 按项目根哈希隔离
+- `handoff` 写入路径 = `path.join(projectRoot, ".cline", "handoffs")` — 跟随项目根，**工具内部硬编码派生，Agent 无法指定任意路径**
+- `handoff --local` 写入路径 = `~/.cline-skills/handoffs/<hash>/` — 按项目哈希隔离
+
+**真正的风险与防御**：
+
+风险不在 `handoff` / `memory` 工具（路径已锁定），而在 Agent 的**通用文件操作**（`write_to_file` / `replace_in_file` / `execute_command`）——这些工具可写到任意路径。防御由 `.clinerules` 规范 11 承担（约束 Agent 通用操作的目标范围），不由 MCP 工具层承担。
+
+**回归保护**：`skills-mcp-server/test-isolation.js` 验证两个不同 projectRoot 派生出的 handoff 路径与 memory hash 互不交叉，防止未来重构路径解析逻辑时破坏隔离。
+
+**例外**：dogfooding 场景下，平台仓库自身就是"用户工程"——在 `cline-skills-workspace` 内 handoff/memory 是合法的。规范 11 的约束是"不把平台当**业务项目**改"，不是"禁止在平台内使用 handoff"。
+
 ---
 
 ## 7. MVP 范围（Phase 1.5 重新定义）
@@ -332,7 +362,7 @@ docs/product-positioning.md  ← 本文，最高锚点
         │
         ├─→ docs/handoff-schema.md          (P0，schema 规范)
         │
-        ├─→ docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md
+        ├─→ docs/plans/2026-06-18-context-and-memory-mvp.md
         │   (重写为：Phase 2 = Handoff Protocol)
         │
         ├─→ skills/handoff-protocol/SKILL.md
