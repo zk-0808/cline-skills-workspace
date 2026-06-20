@@ -1,7 +1,7 @@
 # Handoff Schema · v1.0
 
 > 定稿日期：2026-06-18  
-> 上游锚点：[`docs/product-positioning.md`](./product-positioning.md) §7  
+> 上游锚点：[`docs/product-positioning.md`](product-positioning.md) §7  
 > 状态：✅ 规范定稿（实现层必须严格遵循；任何字段变更需先改本文 + bump `schema_version`）
 
 ---
@@ -210,7 +210,7 @@ project_hash: 6ba9751232ab
 
 > **`status = done` 是该 handoff 的终态。归档后 active 槽位释放；下次 `handoff_write` 在语义上是「新建 handoff」，必须传 `goal`。**
 
-这条规则看起来显然，但在实际使用中容易踩坑（见 `docs/dogfooding-sprint-retrospective.md` §1 Q2）：
+这条规则看起来显然，但在实际使用中容易踩坑（见 `docs/logs/2026-06-18-dogfooding-sprint-retrospective.md` §1 Q2）：
 
 | 错误心智模型 | 正确心智模型 |
 |---|---|

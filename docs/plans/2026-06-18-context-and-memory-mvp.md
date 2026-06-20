@@ -1,7 +1,7 @@
 # Plan: Phase 1.5 Runtime MVP — 上下文压缩 + 跨对话记忆
 
 > 创建日期：2026-06-18  
-> 关联设计：[`docs/gap-analysis-runtime-layer.md`](../../gap-analysis-runtime-layer.md)  
+> 关联设计：[`docs/specs/2026-06-18-gap-analysis-runtime-layer.md`](../specs/2026-06-18-gap-analysis-runtime-layer.md)  
 > 战略路线：B+C 混合（先压缩 → 最小 memory MVP → 不与 Cline 官方撞车）
 
 ---
@@ -214,6 +214,6 @@ END;
 
 | 条款 | 本计划如何满足 |
 |------|--------------|
-| 证据 > 推测 | 所有缺口论断引用 `docs/gap-analysis-runtime-layer.md` 已标注的来源；技术选型逐条说明理由 |
+| 证据 > 推测 | 所有缺口论断引用 `docs/specs/2026-06-18-gap-analysis-runtime-layer.md` 已标注的来源；技术选型逐条说明理由 |
 | 问题 > 方案 | 第 0 节明确「真问题 vs 不做的事」；YAGNI 部分列出主动放弃的能力 |
 | 复杂度必须被证明 | MVP 不引入向量库、不引入外部 LLM 调用、不做平台化；每一项延后都附理由 |

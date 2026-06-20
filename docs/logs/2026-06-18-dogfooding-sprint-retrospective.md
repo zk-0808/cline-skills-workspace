@@ -1,7 +1,7 @@
 # Dogfooding Sprint Retrospective · 2026-06-18 → 06-21（3 天）
 
 > **状态**：Sprint Day 2 写（实际工作推进比预期快，14 天缩短为 3 天，2026-06-21 收尾）
-> **上层锚点**：[dogfooding-sprint.md](./dogfooding-sprint.md) §6 Sprint 收尾产出要求
+> **上层锚点**：[dogfooding-sprint.md](2026-06-18-dogfooding-sprint.md) §6 Sprint 收尾产出要求
 > **目的**：在记忆还热的时候沉淀 Sprint 期内的全部决策、教训、踩坑——比代码本身更值钱
 
 ---
@@ -208,7 +208,7 @@
 - **诱惑**：直接做 A（memory_export/import）—— 看起来"有进度"
 - **决策**：先 B（benchmark plan）→ D（本文）→ A → C
 - **依据**：GPT "你最容易犯的错误是连续实现，没停下来验证"
-- **结果**：B 已完成（`docs/benchmark-plan.md`），D 进行中
+- **结果**：B 已完成（`docs/logs/2026-06-19-benchmark-plan.md`），D 进行中
 
 ---
 
@@ -274,7 +274,7 @@
 
 ### P0（优先级最高）：本周内做
 
-1. **B 已完成** —— `docs/benchmark-plan.md`（设计完成，未实现）
+1. **B 已完成** —— `docs/logs/2026-06-19-benchmark-plan.md`（设计完成，未实现）
 2. **D 已完成** —— 本文
 3. **A 待做** —— memory_export/import 设计文档（不实现）
    - 解决：导出格式 / project_id 选择 / 迁移策略 / 兼容策略
@@ -310,12 +310,12 @@
 
 ## 附录 A：相关文档
 
-- [dogfooding-sprint.md](./dogfooding-sprint.md) — Sprint 规则
-- [dogfooding-log.md](./dogfooding-log.md) — 每日日志
-- [external-review-2026-06-18.md](./external-review-2026-06-18.md) — 外部评审
-- [benchmark-plan.md](./benchmark-plan.md) — Sprint 后 P1 入口
-- [LEARNINGS.md](../LEARNINGS.md) — 全部经验沉淀
-- [.clinerules](../.clinerules) — 当前生效规则
+- [dogfooding-sprint.md](2026-06-18-dogfooding-sprint.md) — Sprint 规则
+- [dogfooding-log.md](2026-06-18-dogfooding-log.md) — 每日日志
+- [external-review-2026-06-18.md](../reviews/2026-06-18-external-review.md) — 外部评审
+- [benchmark-plan.md](2026-06-19-benchmark-plan.md) — Sprint 后 P1 入口
+- [LEARNINGS.md](../../LEARNINGS.md) — 全部经验沉淀
+- [.clinerules](../../.clinerules) — 当前生效规则
 
 ## 附录 B：本文写作过程中的反讽
 

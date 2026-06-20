@@ -1,7 +1,7 @@
 # Dogfooding Sprint · 2026-06-18 起 14 天
 
 > **目的**：验证 Project Continuity MVP 在真实使用中是否成立，而不是在设计上是否成立。
-> **上层锚点**：[`product-positioning.md`](./product-positioning.md) §1 / [`2026-06-18-status-and-directions.md`](./2026-06-18-status-and-directions.md) 项目阶段
+> **上层锚点**：[`product-positioning.md`](../product-positioning.md) §1 / [`2026-06-18-status-and-directions.md`](../specs/2026-06-18-status-and-directions.md) 项目阶段
 > **冻结期**：本 Sprint 期间不接受任何 P0 新增（含 ChatGPT 第二意见 / Browser Automation / 新 Skill / 新 Workflow）
 
 ---
@@ -68,7 +68,7 @@
 
 ## 3. Sprint 日志格式
 
-在 `docs/dogfooding-log.md`（本 Sprint 期间逐条追加）记录：
+在 `docs/logs/2026-06-18-dogfooding-log.md`（本 Sprint 期间逐条追加）记录：
 
 ```markdown
 ## 2026-06-XX
@@ -108,7 +108,7 @@
 
 ## 6. Sprint 收尾产出（2026-07-02 当天）
 
-写入 `docs/dogfooding-sprint-retrospective.md`，必须回答：
+写入 `docs/logs/2026-06-18-dogfooding-sprint-retrospective.md`，必须回答：
 
 1. Q1/Q2/Q3 的明确答复（含证据，引用 dogfooding-log）
 2. **被反复使用 vs 仅设计时显得重要** 的组件清单（可能要砍掉一些）

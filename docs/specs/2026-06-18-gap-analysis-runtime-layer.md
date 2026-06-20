@@ -175,7 +175,7 @@ Phase 4   (v3.0)   平台化
 
 **中期（v1.2）**：
 - 实现 Phase 1.5 最小可行集（5 个产出）
-- 在 `docs/superpowers/specs/` 下补一份 `runtime-foundations-spec.md`，对照本文件第 1-2 节细化设计
+- 在 `docs/specs/` 下补一份 `runtime-foundations-spec.md`，对照本文件第 1-2 节细化设计
 - 把 `evidenceLog` 从内存升级到 SQLite 持久化，作为 trace 系统的起点
 
 **长期（v2.0+）**：

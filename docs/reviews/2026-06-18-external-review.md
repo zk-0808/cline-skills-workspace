@@ -1,6 +1,6 @@
 # 外部评审报告 · 2026-06-18
 
-> **评审者**：Opus 级别 LLM（基于 `docs/review-prompt-for-opus.md` 提交）
+> **评审者**：Opus 级别 LLM（基于 `docs/reviews/2026-06-18-review-prompt-for-opus.md` 提交）
 > **基础**：评审者未直接读源码（仓库未公开索引），基于「严格基于代码现状」的描述评审，所有具体实现推断标注 `[推测]`
 > **价值定位**：本次评审是 14 天 Dogfooding Sprint 的关键外部诊断，对照执行清单见末尾
 

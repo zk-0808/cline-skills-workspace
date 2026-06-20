@@ -332,7 +332,7 @@ docs/product-positioning.md  ← 本文，最高锚点
         │
         ├─→ docs/handoff-schema.md          (P0，schema 规范)
         │
-        ├─→ docs/superpowers/plans/2026-06-18-context-and-memory-mvp.md
+        ├─→ docs/plans/2026-06-18-context-and-memory-mvp.md
         │   (重写为：Phase 2 = Handoff Protocol)
         │
         ├─→ skills/handoff-protocol/SKILL.md

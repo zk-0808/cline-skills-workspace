@@ -294,4 +294,4 @@ input:
 - `skills-mcp-server/lib/git.js` — `getProjectHashByGitUrl()` / `normalizeRemoteUrl()`
 - `skills-mcp-server/handlers/memory-commit.js` — 写入接口
 - `skills-mcp-server/handlers/memory-recall.js` — 检索接口
-- `docs/external-review-2026-06-18.md` §2.4 — 外部评审建议（git URL hash）
+- `docs/reviews/2026-06-18-external-review.md` §2.4 — 外部评审建议（git URL hash）

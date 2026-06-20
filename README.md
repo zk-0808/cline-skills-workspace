@@ -168,7 +168,7 @@ node test-project-hash.js     # 28 passed, 0 failed
 
 详见：
 - [`docs/handoff-schema.md`](docs/handoff-schema.md) — Handoff Schema v1.0（已锁定）
-- [`docs/gap-analysis-runtime-layer.md`](docs/gap-analysis-runtime-layer.md) — 运行时层差距分析
+- [`docs/specs/2026-06-18-gap-analysis-runtime-layer.md`](docs/specs/2026-06-18-gap-analysis-runtime-layer.md) — 运行时层差距分析
 
 ---
 
@@ -221,10 +221,13 @@ cline-skills-workspace/
 │   ├── lib/                      # db / git / handoff-{schema,fs}
 │   └── test-*.js                 # 141 个用例
 ├── docs/
-│   ├── product-positioning.md    # ⭐ 项目定位（最高锚点）
-│   ├── handoff-schema.md         # Handoff Schema v1.0
-│   ├── skill-spec.md             # Skill 规范
-│   └── ...
+│   ├── product-positioning.md    # ⭐ 项目定位（最高锚点，稳定不变）
+│   ├── handoff-schema.md         # Handoff Schema v1.0（核心规范）
+│   ├── skill-spec.md             # Skill 规范（核心规范）
+│   ├── plans/                    # 实施计划（YYYY-MM-DD-<feature>.md）
+│   ├── specs/                    # 设计规格（YYYY-MM-DD-<topic>.md）
+│   ├── reviews/                  # 评审材料（YYYY-MM-DD-<type>.md）
+│   └── logs/                     # 日志与复盘（YYYY-MM-DD-<event>.md）
 ├── tools/
 │   └── validate-skills.js        # Skill 格式校验
 ├── archive/                      # 已归档（与定位无关的历史资产）
@@ -276,10 +279,10 @@ cline-skills-workspace/
 | `memory-export-import` 设计 | ✅ | 文档完成，实现延期到 v1.1 |
 
 近期关键文档：
-- [`docs/dogfooding-sprint-retrospective.md`](docs/dogfooding-sprint-retrospective.md) — Sprint 复盘（Q1/Q2/Q3 答案 + 6 条教训）
-- [`docs/dogfooding-sprint.md`](docs/dogfooding-sprint.md) — Sprint 规则
-- [`docs/external-review-2026-06-18.md`](docs/external-review-2026-06-18.md) — 外部评审反馈
-- [`docs/benchmark-plan.md`](docs/benchmark-plan.md) — BM25 验证框架设计
+- [`docs/logs/2026-06-18-dogfooding-sprint-retrospective.md`](docs/logs/2026-06-18-dogfooding-sprint-retrospective.md) — Sprint 复盘（Q1/Q2/Q3 答案 + 6 条教训）
+- [`docs/logs/2026-06-18-dogfooding-sprint.md`](docs/logs/2026-06-18-dogfooding-sprint.md) — Sprint 规则
+- [`docs/reviews/2026-06-18-external-review.md`](docs/reviews/2026-06-18-external-review.md) — 外部评审反馈
+- [`docs/logs/2026-06-19-benchmark-plan.md`](docs/logs/2026-06-19-benchmark-plan.md) — BM25 验证框架设计
 
 ---
 
