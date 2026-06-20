@@ -336,7 +336,11 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
   }
 
   const lines = [
-    `首次创建 handoff 必须传 \`goal\`（一句话项目目标）。`,
+    `新建 handoff 必须传 \`goal\`（一句话项目目标，首次创建或 active 已归档后重建均需提供）。`,
+    ``,
+    `### ⚠️ 最常见原因`,
+    `上一条 handoff_write 使用了 \`status=done\`。done 会立即归档 active 文件，active 槽位被释放。`,
+    `因此本次 write 被视为**新建 handoff**，需要重新提供 \`goal\`。`,
     ``,
     `### 📍 诊断`,
     `- **branch**: \`${branch}\``,
@@ -352,7 +356,7 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
       const diffMs = now - c.mtime;
       const ageStr =
         diffMs < 60_000
-          ? `${Math.round(diffMs / 1000)} 秒前 ⚠️ 刚刚归档 — 如果这是意外，请检查上一条 handoff_write 是否误用了 status=done`
+          ? `${Math.round(diffMs / 1000)} 秒前 ⚠️ 刚刚归档 — 请检查上一条 handoff_write 是否使用了 status=done`
           : diffMs < 3_600_000
             ? `${Math.round(diffMs / 60_000)} 分钟前`
             : diffMs < 86_400_000
@@ -362,17 +366,17 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
     });
 
     lines.push(
-      `- **同 slug 归档候选**: 检测到 ${archiveCandidates.length} 个最近归档文件：`,
+      `- **同 branch 历史 handoff**: 检测到 ${archiveCandidates.length} 个最近归档文件：`,
       ...candidateLines,
       ``,
       `> ⚠️ 上一个同 branch 的 handoff 已被归档（可能是 \`status=done\` 或手动归档）。`,
-      `> 这意味着旧任务在语义上已**结束**。如果你想：`,
+      `> 这意味着旧任务在语义上已**结束**，active 槽位已释放。如果你想：`,
       `> - **延续旧任务的工作**：请显式传 \`goal\`（可从归档文件 read_file 复制旧 goal）`,
       `> - **开始新任务**：传一个新的 \`goal\``
     );
   } else {
     lines.push(
-      `- **同 slug 归档候选**: 无（archive 目录无同 branch 归档文件）`,
+      `- **同 branch 历史 handoff**: 无（archive 目录无同 branch 归档文件）`,
       ``,
       `> 这是该 branch 上的全新 handoff。请传 \`goal\` + 至少 1 项 \`next_action\`。`
     );
@@ -385,11 +389,9 @@ function buildGoalRequiredDiagnostics({ branch, activePath, projectRoot, local }
     `- \`goal\`: 一句话目标（≤120 字符）`,
     `- \`next_action\`: 至少 1 项可执行动作`,
     ``,
-    `> 💡 schema 语义：\`status=done\` 是**终态**，归档后 active 槽位释放，下次 write 即新建。`,
-    `> 详见 \`docs/handoff-schema.md\` §3 状态机。`,
+    `> 💡 详见 \`docs/handoff-schema.md\` §3 状态机（\`status=done\` 是终态，归档后 active 槽位释放）。`,
     ``,
-    `> 🔍 **为什么同会话内 resume 成功但 write 失败？** 检查上一条 handoff_write 是否用了 \`status: done\`——这会立即归档 active 文件，导致后续 write 视为新建。`,
-    `> 如果确认 active 文件应存在但实际不存在：对比上方的 \`projectRoot\` 与你预期的项目根路径是否一致；或在 handoff 目录下手动检查文件。`
+    `> 🔍 如果确认 active 文件应存在但实际不存在：对比上方的 \`projectRoot\` 与你预期的项目根路径是否一致；或在 handoff 目录下手动检查文件。`
   );
 
   return lines.join("\n");
