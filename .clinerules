@@ -89,26 +89,13 @@
 
 ### 规范 2：提问时机与阻塞信号
 
-不要在 thinking 中已有结论后再重复问用户相同问题（浪费用户时间）。
-但不确定时**必须**用 ask_followup_question 提问，而非基于推测继续——提问的成本远低于执行错误方向的成本。
+> Cline 原生系统提示已规定「不确定时用 ask_followup_question」「vague request 必须先 clarify」。
+> 本规范只补充原生提示未覆盖的增量：**阻塞状态下的工具选择**。
 
-**ask_followup_question 的双重功能**：
-1. **信息获取**：缺少必要细节才能继续时提问
-2. **流程信号**：任务处于"等待用户决策才能继续"的阻塞状态时，用 ask_followup_question 提醒用户介入，**而非用 attempt_completion**（后者暗示任务已完成，用户可能错过后续确认节点）
-
-**必须用 ask_followup_question 的场景**：
-- 任务目标模糊，多种合理解读会导致不同执行路径
-- 涉及高风险操作（删除、推送、不可逆变更）且用户意图不明确
-- 存在多个方案且各有显著 trade-off，需要用户选择
-- 任务已完成阶段性目标，但后续步骤需要用户授权/确认/决策（此时 attempt_completion 会误导用户以为全部结束）
-
-**必须用 attempt_completion 的场景**：
-- 任务的所有目标已全部完成，没有待确认的后续步骤
-
-**可跳过提问的场景**：
-- 已有足够上下文推断意图
-- 简单事实查询（版本号、语法、定义）
-- 文件位置可通过 list_files/search_files 快速定位
+**ask_followup_question vs attempt_completion 的边界**：
+- 任务处于"等待用户决策才能继续"的阻塞状态时（如等待 merge 授权、方案选择、高风险操作确认），**必须用 ask_followup_question** 提醒用户介入
+- **不要用 attempt_completion** 表达阻塞——后者暗示任务已完成，用户可能错过后续确认节点
+- attempt_completion 仅用于：任务的所有目标已全部完成，没有待确认的后续步骤
 
 ### 规范 3：完成后必须总结
 
