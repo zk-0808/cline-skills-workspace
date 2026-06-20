@@ -1,10 +1,10 @@
 ---
 schema_version: "1.0"
-status: blocked
+status: done
 branch: chore/v1.0-freeze-p0
 goal: v1.0 MVP 冻结宣布 — 等待用户外部评审确认
 created_at: 2026-06-20T01:48:58+08:00
-updated_at: 2026-06-20T12:24:22+08:00
+updated_at: 2026-06-20T12:41:00+08:00
 project_hash: 6ba9751232ab
 ---
 
@@ -15,20 +15,18 @@ project_hash: 6ba9751232ab
 - 评审项 ③ 路线图 §5b 'Runtime Layer' → 'Project Continuity Layer'
 - 评审项 ④ GOAL_REQUIRED 诊断优化
 - 修复 validate-skills.js 报错 + 校验通过 + 测试 19/19
-- 用户外部审核通过（LGTM），commit fc216ad
-- 新问题修复：规范 2 重写 — ask_followup_question 流程信号功能 + 必须提问场景清单（commit dd46e74）
+- 用户外部审核通过（LGTM）
+- 规范 2 修复：ask_followup_question 流程信号功能（先写过度版，后精简为增量版）
+- fast-forward merge 到 main + 推送 main 到 origin
+- 推送 chore/v1.0-freeze-p0 到 origin
+- v1.0 MVP 冻结宣布
 
 ## in_progress
 
 ## next_action
-- 用户确认 merge 策略（fast-forward 或 --no-ff）和推送授权
-- merge chore/v1.0-freeze-p0 到 main
-- 宣布 v1.0 MVP 冻结（handoff status=done 归档）
-- 推送 main 到 origin（高风险，需二次确认）
+- v1.0 已冻结。后续可开始 v1.1 候选：memory_export/import、benchmark、补 2 个 SKILL.test.md
 
 ## do_not
-- 在用户确认 merge 策略和推送授权前执行 merge
-- 直接 git push 未经二次确认
 - 在 rebase 后 push force 之外再加任何提交
 
 ## artifacts
