@@ -1,10 +1,10 @@
 ---
 schema_version: "1.0"
-status: active
+status: blocked
 branch: chore/v1.0-freeze-p0
 goal: v1.0 MVP 冻结宣布 — 等待用户外部评审确认
 created_at: 2026-06-20T01:48:58+08:00
-updated_at: 2026-06-20T12:10:18+08:00
+updated_at: 2026-06-20T12:10:57+08:00
 project_hash: 6ba9751232ab
 ---
 
@@ -20,6 +20,7 @@ project_hash: 6ba9751232ab
 - 用户外部审核通过（LGTM），commit fc216ad
 
 ## in_progress
+- v1.0 冻结流程执行（merge + 推送）— 等待用户确认 merge 策略和推送授权
 
 ## next_action
 - 用户确认 merge 策略（fast-forward 或 --no-ff）和推送授权
@@ -41,7 +42,6 @@ project_hash: 6ba9751232ab
 - docs/superpowers/specs/2026-06-17-project-roadmap-design.md
 
 ## blocked_by
-- 评审 ① LEARNINGS/DEV_NOTES 架构拆分：原 LEARNINGS.md 拆为用户层（通用经验）+ DEV_NOTES.md（本机/本仓库特化）。评审分层边界是否干净、有无重复表达
-- 评审 ② .clinerules 规范 10 第 5 类 + 规范 7 PS7 emoji 警告：措辞是否过窄
-- 评审 ③ 路线图 v2.0 §5b：pivot 表述是否准确
-- 评审 ④ GOAL_REQUIRED 诊断措辞：projectRoot/cwd/归档时间差/常见陷阱提示是否清晰
+- 用户确认 merge 策略：fast-forward（线性历史）还是 --no-ff（保留分支合并记录）？
+- 用户确认推送授权：merge 后是否立即推送到 origin/main？
+- 用户确认执行顺序：先 merge 再宣布冻结，还是先宣布冻结再 merge？
